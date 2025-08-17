@@ -1,0 +1,373 @@
+<!doctype html><html lang="en"><head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>BetterBot DC — Super (Safari‑Proof)</title>
+<link rel="icon" href="data:,">
+<!-- Try WebLLM; if it fails, we fall back to Lite mode -->
+<script defer src="https://unpkg.com/@mlc-ai/web-llm/dist/web-llm.min.js"></script>
+<style>
+:root{--bg:#0b1022;--panel:#0f172a;--text:#e5e7eb;--muted:#94a3b8;--accent:#1e3a8a;--accent2:#2563eb;--danger:#ef4444;--ok:#22c55e}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+.container{max-width:1060px;margin:0 auto;padding:18px}
+.header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 12px;border-radius:12px;background:var(--accent2);color:#fff;font-weight:700;border:1px solid #1b3b8f;cursor:pointer}
+.btn.ghost{background:transparent;color:#cbd5e1;border:1px solid #223047}
+.btn.secondary{background:var(--accent)}
+.btn.warn{background:var(--danger);border-color:#b91c1c}
+.btn.ok{background:var(--ok);border-color:#15803d}
+.input,select{padding:9px;border-radius:12px;border:1px solid #223047;background:#0b1324;color:#e5e7eb}
+.panel{background:var(--panel);border:1px solid #1f2937;border-radius:16px;padding:10px;margin:10px 0}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0}
+.small{font-size:12px;color:var(--muted)}
+.bubble{padding:10px 12px;border-radius:14px;margin:8px 0;line-height:1.4;overflow-wrap:anywhere}
+.user{background:rgba(37,99,235,.15)}.bot{background:#0a1226}
+#log{height:360px;overflow:auto}
+iframe{border:0;border-radius:12px}
+.tag{font-size:11px;padding:4px 8px;border-radius:999px;background:#1d4ed81f;border:1px solid #1d4ed866;color:#93c5fd}
+.kpi{display:inline-flex;gap:6px;flex-wrap:wrap;align-items:center}
+.kpi .pill{font-size:12px;padding:6px 10px;border-radius:999px;background:#1d4ed81a;border:1px solid #1d4ed84d}
+.badge{font-size:11px;padding:4px 8px;border-radius:8px;background:#1d4ed81a;border:1px solid #1d4ed84d;color:#93c5fd}
+</style></head><body>
+<div class="container">
+  <header class="header">
+    <div><strong style="font-size:18px">BetterBot DC — Super</strong>
+      <div class="small">If local model can’t load on Safari, it auto-switches to <b>Local (Lite)</b>.</div>
+    </div>
+    <div class="row" style="margin:0">
+      <span id="modeBadge" class="badge">Mode: detecting…</span>
+      <button id="blueBtn" class="btn secondary">Blue ON</button>
+      <button id="installBtn" class="btn ghost" style="display:none">Install app</button>
+      <button id="makePwaBtn" class="btn">Generate PWA files</button>
+    </div>
+  </header>
+
+  <!-- Provider + Keys (optional) -->
+  <section class="panel">
+    <div class="row">
+      <select id="provider" class="input" style="max-width:260px">
+        <option value="auto">Auto (OpenAI → DeepSeek → HF → Local/ Lite)</option>
+        <option value="openai">OpenAI only</option>
+        <option value="deepseek">DeepSeek only</option>
+        <option value="hf">Hugging Face only</option>
+        <option value="local" selected>Local (WebLLM)</option>
+        <option value="lite">Local (Lite)</option>
+      </select>
+      <select id="localModel" class="input" style="max-width:300px">
+        <option value="Llama-3.2-1B-Instruct-q4f16_1-MLC">Llama 3.2 1B (tiny)</option>
+        <option value="Llama-3.2-3B-Instruct-q4f16_1-MLC" selected>Llama 3.2 3B</option>
+      </select>
+      <span class="small">Tip: choose <b>Lite</b> if Safari blocks WebLLM.</span>
+    </div>
+    <div class="row">
+      <input id="oaKey" class="input" placeholder="OpenAI API Key (optional)"/>
+      <input id="oaModel" class="input" value="auto" placeholder="OpenAI model"/>
+      <input id="dsKey" class="input" placeholder="DeepSeek Key (optional)"/>
+      <input id="dsModel" class="input" value="auto" placeholder="DeepSeek model"/>
+      <input id="hfKey" class="input" placeholder="Hugging Face Token (optional)"/>
+      <input id="hfModel" class="input" value="google/gemma-2-2b-it" placeholder="HF model"/>
+    </div>
+    <div class="row">
+      <button class="btn" id="saveKeysBtn">Save keys</button>
+      <button class="btn ghost" id="exportKeysBtn">Export</button>
+      <label class="btn ghost" for="importKeysFile" style="cursor:pointer">Import</label>
+      <input id="importKeysFile" type="file" accept=".json" style="display:none">
+      <button class="btn warn" id="forgetKeysBtn">Forget</button>
+    </div>
+    <div class="kpi" id="usage"><span class="pill">Last: —</span><span class="pill">Total: —</span><span class="pill">By provider: —</span></div>
+  </section>
+
+  <!-- User + Manual Memory -->
+  <section class="panel">
+    <div class="row">
+      <input id="name" class="input" value="Dhruv" style="max-width:160px"/>
+      <input id="ints" class="input" value="Roblox, Mama" style="min-width:220px"/>
+      <button class="btn ok" id="rememberBtn">Remember last</button>
+      <button class="btn ghost" id="viewMemBtn">View memory</button>
+      <button class="btn warn" id="forgetMemBtn">Forget memory</button>
+    </div>
+    <div class="small">Manual memory: press <b>Remember last</b> after you send a message.</div>
+  </section>
+
+  <!-- Music -->
+  <section class="panel">
+    <div class="small" style="margin-bottom:6px">Music station</div>
+    <div class="row">
+      <button class="btn" onclick="setStation('https://www.youtube.com/embed/videoseries?list=PLMC9KNkIncKtPzgY-5rmhvj7fax8fdxoj')">🎤 Ed YouTube</button>
+      <button class="btn" onclick="setStation('https://open.spotify.com/embed/artist/6eUKZXaKkcviH0Ku9w2n3V')">🎤 Ed Spotify</button>
+      <input id="customUrl" class="input" placeholder="Paste YouTube/Spotify EMBED URL"/>
+      <button class="btn ghost" onclick="setStation(document.getElementById('customUrl').value)">Use link</button>
+    </div>
+    <div class="panel" style="padding:0"><iframe id="playerFrame" width="100%" height="180" allow="autoplay; encrypted-media; picture-in-picture" loading="lazy"></iframe></div>
+  </section>
+
+  <!-- Sessions -->
+  <section class="panel">
+    <div class="row">
+      <span class="tag">Chats</span>
+      <select id="chatSelect" class="input" style="max-width:320px"></select>
+      <button class="btn" onclick="newChat()">New</button>
+      <button class="btn ghost" onclick="saveChat()">Save</button>
+      <button class="btn ghost" onclick="downloadChat()">Download</button>
+      <button class="btn warn" onclick="deleteChat()">Delete</button>
+    </div>
+    <div class="small">Stored locally in your browser.</div>
+  </section>
+
+  <!-- Chat -->
+  <section class="panel">
+    <div id="log"></div>
+    <div class="row">
+      <input id="msg" class="input" placeholder="Type a message… (Enter to send)"/>
+      <button class="btn" onclick="send()">Send</button>
+      <button id="micBtn" class="btn secondary" onclick="toggleMic()">🎙️ Mic</button>
+      <button id="ttsBtn" class="btn ghost" onclick="toggleTTS()">🔊 Speak: Off</button>
+      <button class="btn ghost" onclick="testProvider()">Test</button>
+      <button class="btn warn" onclick="clearChat()">Clear</button>
+    </div>
+    <div id="diag" class="small"></div>
+  </section>
+
+  <section class="panel"><div class="small"><b>PWA:</b> Click “Generate PWA files”, then serve over localhost/HTTPS to see the Install button.</div></section>
+</div>
+
+<script>
+/* ---------- helpers/state ---------- */
+function $(s){return document.querySelector(s)}
+var logEl=$('#log'), diag=$('#diag'), modeBadge=$('#modeBadge');
+var OPENAI_CANDIDATES=['gpt-4o-mini','gpt-4.1-mini','gpt-4o','gpt-4.1'];
+var DEEPSEEK_CANDIDATES=['deepseek-v3','deepseek-reasoner','deepseek-chat'];
+var speakReplies=false, currentSessionId=null;
+var chat=[{role:'bot',text:"Hi! I'm BetterBot DC. Type /help to see commands."}];
+function render(){var html=''; for(var i=0;i<chat.length;i++){var m=chat[i]; html+='<div class="bubble '+(m.role==='user'?'user':'bot')+'"><div class="small">'+(m.role==='user'?(getUserName()||'Me'):'BetterBot DC')+'</div><div>'+String(m.text||'').replace(/</g,'&lt;')+'</div></div>'} logEl.innerHTML=html; logEl.scrollTop=logEl.scrollHeight}
+render(); function clearChat(){chat=[{role:'bot',text:'Chat cleared. What next?'}];render()}
+
+/* ---------- keys ---------- */
+var KEY_STORE='bb_keys_v2';
+function getKeys(){try{return JSON.parse(localStorage.getItem(KEY_STORE)||'{}')}catch(e){return{}}}
+function setKeys(o){localStorage.setItem(KEY_STORE,JSON.stringify(o))}
+function loadKeysToUI(){var k=getKeys(); if(k.provider)$('#provider').value=k.provider;
+  if(k.oa)$('#oaKey').value=k.oa; if(k.oaModel)$('#oaModel').value=k.oaModel||'auto';
+  if(k.ds)$('#dsKey').value=k.ds; if(k.dsModel)$('#dsModel').value=k.dsModel||'auto';
+  if(k.hf)$('#hfKey').value=k.hf; if(k.hfModel)$('#hfModel').value=k.hfModel||'google/gemma-2-2b-it';
+  if(k.localModel)$('#localModel').value=k.localModel;}
+function readKeys(){return{provider:$('#provider').value,oa:$('#oaKey').value.trim(),oaModel:$('#oaModel').value.trim(),ds:$('#dsKey').value.trim(),dsModel:$('#dsModel').value.trim(),hf:$('#hfKey').value.trim(),hfModel:$('#hfModel').value.trim(),localModel:$('#localModel').value}}
+$('#saveKeysBtn').addEventListener('click',function(){setKeys(readKeys());alert('Saved on this device.')})
+$('#forgetKeysBtn').addEventListener('click',function(){localStorage.removeItem(KEY_STORE);['oaKey','dsKey','hfKey'].forEach(function(id){var el=document.getElementById(id);if(el)el.value=''});alert('Keys cleared.')})
+$('#exportKeysBtn').addEventListener('click',function(){var blob=new Blob([JSON.stringify(readKeys(),null,2)],{type:'application/json'});var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='betterbot-keys.json';a.click();setTimeout(function(){URL.revokeObjectURL(a.href)},1000)})
+$('#importKeysFile').addEventListener('change',function(e){var f=e.target.files&&e.target.files[0];if(!f)return;var r=new FileReader();r.onload=function(){try{setKeys(JSON.parse(r.result));loadKeysToUI();alert('Keys imported.')}catch(e){alert('Invalid JSON.')}};r.readAsText(f)})
+loadKeysToUI();
+
+/* ---------- manual memory ---------- */
+function getUserName(){return $('#name').value||'Dhruv'}
+function memKey(){return 'bb_memory_'+getUserName()}
+function getMem(){try{return JSON.parse(localStorage.getItem(memKey())||'[]')}catch(e){return[]}}
+function setMem(a){localStorage.setItem(memKey(),JSON.stringify(a))}
+function rememberLatest(){var last=null; for(var i=chat.length-1;i>=0;i--){if(chat[i].role==='user'){last=chat[i].text;break}} if(!last){alert('No recent user message.');return} var mem=getMem(); mem.unshift(last); setMem(mem.slice(0,500)); alert('Saved to memory for '+getUserName());}
+function viewMem(){var m=getMem(); alert(m.length?('Memory for '+getUserName()+':\n\n- '+m.join('\n- ')):'No memory yet.')}
+function forgetMem(){if(confirm('Forget ALL memory for '+getUserName()+'?')){setMem([]);alert('Memory cleared.')}}
+$('#rememberBtn').addEventListener('click',rememberLatest);$('#viewMemBtn').addEventListener('click',viewMem);$('#forgetMemBtn').addEventListener('click',forgetMem);
+
+/* ---------- system prompt ---------- */
+function buildSystem(){var mem=getMem();var name=getUserName();var ints=($('#ints').value||'').split(',').map(function(s){return s.trim()}).filter(Boolean).join(', ');var memBlock=mem.length?('\nKnown memories (keep consistent):\n- '+mem.slice(0,50).join('\n- ')):'';return 'You are DRAR CARS BetterBot DC. Be friendly and concise.\nUser name: '+name+'\nInterests: '+(ints||'none')+memBlock}
+
+/* ---------- usage pills ---------- */
+var usageState={last:null,total:0,by:{}}; function addUsage(provider,usage){if(!usage||usage.total_tokens==null){usageState.last=provider+': n/a'}else{usageState.last=provider+': '+usage.total_tokens;usageState.total+=usage.total_tokens;usageState.by[provider]=(usageState.by[provider]||0)+usage.total_tokens}
+var pills=$('#usage').querySelectorAll('.pill'); if(pills[0])pills[0].textContent='Last: '+(usageState.last||'—'); if(pills[1])pills[1].textContent='Total: '+(usageState.total||0);
+if(pills[2]){var s=[];for(var k in usageState.by){s.push(k+' '+usageState.by[k])} pills[2].textContent='By provider: '+(s.length?s.join(', '):'—')}}
+
+/* ---------- history ---------- */
+function historyForAPI(){var h=[], start=Math.max(0,chat.length-6); for(var i=start;i<chat.length;i++){var m=chat[i];h.push({role:m.role==='user'?'user':'assistant',content:m.text})} return h}
+
+/* ---------- cloud providers ---------- */
+function safeDiag(label,msg){diag.textContent=label+': '+(msg||'error')}
+async function callOpenAI(p){var key=($('#oaKey').value||'').trim(); if(!key)throw new Error('skip'); var mf=($('#oaModel').value||'auto').trim().toLowerCase(); var list=(mf&&mf!=='auto')?[mf]:OPENAI_CANDIDATES; var lastErr=null;
+for(var i=0;i<list.length;i++){var model=list[i]; var res=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},body:JSON.stringify({model:model,messages:[{role:'system',content:p.system}].concat(p.history).concat([{role:'user',content:p.userText}]),temperature:0.7,max_tokens:300})});
+if(res.ok){var data=await res.json(); addUsage('OpenAI',data.usage); var c=(data.choices&&data.choices[0]&&data.choices[0].message&&data.choices[0].message.content)||''; return (c||'(no reply)').trim()} else {lastErr=await res.text().catch(function(){return 'HTTP '+res.status})}}
+safeDiag('OpenAI',lastErr||'model error'); throw new Error('OpenAI: '+(lastErr||'model error'))}
+async function callDeepSeek(p){var key=($('#dsKey').value||'').trim(); if(!key)throw new Error('skip'); var mf=($('#dsModel').value||'auto').trim().toLowerCase(); var list=(mf&&mf!=='auto')?[mf]:DEEPSEEK_CANDIDATES; var lastErr=null;
+for(var i=0;i<list.length;i++){var model=list[i]; var res=await fetch('https://api.deepseek.com/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},body:JSON.stringify({model:model,messages:[{role:'system',content:p.system}].concat(p.history).concat([{role:'user',content:p.userText}]),temperature:0.7,max_tokens:300})});
+if(res.ok){var data=await res.json(); addUsage('DeepSeek',data.usage); var c=(data.choices&&data.choices[0]&&data.choices[0].message&&data.choices[0].message.content)||''; return (c||'(no reply)').trim()} else {lastErr=await res.text().catch(function(){return 'HTTP '+res.status})}}
+safeDiag('DeepSeek',lastErr||'model error'); throw new Error('DeepSeek: '+(lastErr||'model error'))}
+async function callHF(p){var key=($('#hfKey').value||'').trim(); if(!key)throw new Error('skip'); var model=($('#hfModel').value||'google/gemma-2-2b-it').trim();
+var hist='';var h=p.history; for(var i=0;i<h.length;i++){hist+=(h[i].role==='user'?'User: ':'Assistant: ')+h[i].content+'\n'}
+var prompt=p.system+'\n\n'+hist+'User: '+p.userText+'\nAssistant:'; var lastErr=null;
+try{var res=await fetch('https://api-inference.huggingface.co/models/'+encodeURIComponent(model),{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},body:JSON.stringify({inputs:prompt,parameters:{max_new_tokens:300,temperature:0.7,return_full_text:false}})});
+if(!res.ok){lastErr=await res.text().catch(function(){return 'HTTP '+res.status}); throw new Error(lastErr||'HF error')}
+var data=await res.json(); addUsage('HF',null); var txt=''; if(Array.isArray(data)&&data[0]&&data[0].generated_text)txt=data[0].generated_text; else if(data&&data.generated_text)txt=data.generated_text; return (txt||'(no reply)').trim()}
+catch(e){safeDiag('HF',e&&e.message||e); throw new Error('HF: '+(e&&e.message||e))}}
+
+/* ---------- Local (WebLLM) — Safari-proof loading ---------- */
+var webllmEngine=null, webllmLoading=false, localMode='detecting'; // 'webllm'|'lite'
+function setModeBadge(text){modeBadge.textContent='Mode: '+text}
+async function waitForWebLLM(ms){var start=Date.now(); while(!(window&&window.webllm&&window.webllm.CreateMLCEngine)){ if(Date.now()-start>(ms||12000)) throw new Error('WebLLM library missing'); await new Promise(function(r){setTimeout(r,120)}) } return window.webllm.CreateMLCEngine}
+async function ensureLocalWebLLM(){
+  if(webllmEngine||webllmLoading) return;
+  webllmLoading=true; diag.textContent='Loading local model…';
+  try{
+    var CreateMLCEngine=await waitForWebLLM(12000); // short wait; if fails, we fall back
+    var modelId=$('#localModel').value;
+    webllmEngine=await CreateMLCEngine(modelId,{gpuMemoryUtilization:0.6,streamProgressCallback:function(p){var pc=Math.round(((p&&p.progress)||0)*100); diag.textContent='Loading: '+pc+'%'}});
+    localMode='webllm'; setModeBadge('Local (WebLLM)'); diag.textContent='Local model ready.';
+  }catch(e){
+    // hard fallback to Lite
+    localMode='lite'; setModeBadge('Local (Lite)'); diag.textContent='Local (Lite) active.';
+  }finally{webllmLoading=false}
+}
+async function callLocalWebLLM(p){
+  await ensureLocalWebLLM();
+  if(localMode!=='webllm') throw new Error('fallback'); // force router to try Lite
+  var messages=[{role:'system',content:p.system}].concat(p.history).concat([{role:'user',content:p.userText}]);
+  var out=''; var idx=chat.push({role:'bot',text:'…'})-1; render();
+  var stream=await webllmEngine.chat.completions.create({messages:messages,stream:true,temperature:0.7,max_tokens:300});
+  try{for await (var ch of stream){var d=(ch&&ch.choices&&ch.choices[0]&&ch.choices[0].delta&&ch.choices[0].delta.content)||''; out+=d; chat[idx].text=out||'…'; render()}}catch(e){}
+  addUsage('Local',null); return (out||'(no reply)').trim()}
+
+/* ---------- Local (Lite) engine ---------- */
+function liteReply(user, sys){
+  var t=user.trim(), lc=t.toLowerCase();
+  // commands
+  if(t==='/help') return "Commands:\n/help • /time • /coin • /echo <text> • /clear • /roll 1d20 • /timer 10s • /sum <text>";
+  if(t==='/time') return 'time: '+new Date().toLocaleString();
+  if(t==='/coin') return Math.random()<0.5?'Heads!':'Tails!';
+  if(/^\/echo\s+/.test(t)) return t.replace(/^\/echo\s+/,'');
+  if(/^\/roll\s+(\d+)d(\d+)\s*$/i.test(t)){var m=t.match(/^\/roll\s+(\d+)d(\d+)\s*$/i),n=+m[1],sides=+m[2],arr=[],sum=0; n=Math.min(n,20); for(var i=0;i<n;i++){var r=1+Math.floor(Math.random()*sides);arr.push(r);sum+=r} return '🎲 '+arr.join(', ')+'  |  total='+sum}
+  if(/^\/timer\s+(\d+)(s|m)$/i.test(t)){var mm=t.match(/^\/timer\s+(\d+)(s|m)$/i),num=+mm[1],unit=mm[2]; var ms=unit==='s'?num*1000:num*60000; setTimeout(function(){chat.push({role:'bot',text:'⏰ Timer done!'});render(); if(speakReplies)speakText('Timer done')},ms); return '⏳ timer set for '+num+unit}
+  if(/^\/sum\s+/.test(t)){var txt=t.replace(/^\/sum\s+/,''); return liteSummarize(txt)}
+  // small talk / memory aware
+  if(/\bhello|hi|hey\b/.test(lc)) return 'hey '+(getUserName()||'there')+'! what should we build next?';
+  if(/your name|who are you/i.test(t)) return "I'm BetterBot DC (Lite).";
+  // fallback: short supportive reply
+  var endings=["cool! want me to add more powers?","nice—try /help for tricks","okay! want a timer or dice roll?","got it—want music while we chat?"];
+  return endings[Math.floor(Math.random()*endings.length)];
+}
+function liteSummarize(text){
+  // ultra-simple freq summary
+  var s=text.replace(/\s+/g,' ').trim(); if(!s) return '(nothing to summarize)';
+  var sentences=s.split(/(?<=[.!?])\s+/).slice(0,12);
+  var freq={}, words=s.toLowerCase().match(/[a-z']{3,}/g)||[];
+  for(var i=0;i<words.length;i++){var w=words[i]; freq[w]=(freq[w]||0)+1}
+  sentences.sort(function(a,b){
+    function score(str){var sc=0, ws=(str.toLowerCase().match(/[a-z']{3,}/g)||[]); for(var j=0;j<ws.length;j++){sc+=freq[ws[j]]||0} return sc/Math.sqrt(str.length+1)}
+    return score(b)-score(a)
+  });
+  return 'TL;DR:\n- '+sentences.slice(0,3).join('\n- ');
+}
+async function callLocalLite(p){
+  var out=''; var idx=chat.push({role:'bot',text:'…'})-1; render();
+  // pretend stream
+  var reply=liteReply(p.userText,p.system);
+  for(var i=0;i<reply.length;i+=8){await new Promise(function(r){setTimeout(r,10)}); out+=reply.slice(i,i+8); chat[idx].text=out; render()}
+  return out.trim()
+}
+
+/* ---------- router ---------- */
+function looksLikeAKey(s){return /(sk-[\w-]{10,}|hf_[\w-]{10,}|AIzaSy|ghp_[\w]{20,}|aws_secret|-----BEGIN)/i.test(s)}
+function mode(){return $('#provider').value||'local'}
+async function askSmart(userText){
+  var payload={system:buildSystem(),history:historyForAPI(),userText:userText};
+  var m=mode();
+
+  async function tryRun(fn){try{var r=await fn(payload); if(r) return r}catch(e){return null} return null}
+
+  if(m==='openai') return (await tryRun(callOpenAI)) || '(no reply)';
+  if(m==='deepseek')return (await tryRun(callDeepSeek))||'(no reply)';
+  if(m==='hf')     return (await tryRun(callHF))     || '(no reply)';
+  if(m==='local')  { var r=await tryRun(callLocalWebLLM); if(r) return r; return await callLocalLite(payload) }
+  if(m==='lite')   return await callLocalLite(payload);
+
+  // auto chain
+  var r=null;
+  r=await tryRun(callOpenAI); if(r) return r;
+  r=await tryRun(callDeepSeek); if(r) return r;
+  r=await tryRun(callHF); if(r) return r;
+  r=await tryRun(callLocalWebLLM); if(r) return r;
+  return await callLocalLite(payload);
+}
+
+/* ---------- send/test ---------- */
+var msgBox=document.getElementById('msg');
+msgBox.addEventListener('keydown',function(e){ if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send()}});
+async function send(){
+  var t=(msgBox.value||'').trim(); if(!t)return;
+  if(looksLikeAKey(t)){alert('Blocked: that looks like a secret key.'); return;}
+  msgBox.value=''; chat.push({role:'user',text:t}); render();
+  // fast local commands handled here too
+  if(t==='/help'||t==='/time'||t==='/coin'||/^\/echo /.test(t)||/^\/roll \d+d\d+$/i.test(t)||/^\/timer \d+(s|m)$/i.test(t)||/^\/sum /.test(t)){
+    var reply=liteReply(t,''); chat.push({role:'bot',text:reply}); render(); if(speakReplies)speakText(reply); return;
+  }
+  try{
+    var reply=await askSmart(t);
+    chat.push({role:'bot',text:reply}); render(); if(speakReplies)speakText(reply); diag.textContent='';
+  }catch(e){
+    chat.push({role:'bot',text:'Error: '+(e&&e.message||e)}); render(); diag.textContent=(e&&e.message||e);
+  }
+}
+async function testProvider(){diag.textContent='Testing…'; try{await askSmart('Say hi in one short sentence.'); diag.textContent='Provider OK ✅'}catch(e){diag.textContent='Provider error ❌ '+(e&&e.message||e)}}
+
+/* ---------- sessions ---------- */
+function sessionKey(id){return 'bb_session_'+id}
+function loadSessionList(){try{return JSON.parse(localStorage.getItem('bb_sessions_v1')||'[]')}catch(e){return[]}}
+function saveSessionList(list){localStorage.setItem('bb_sessions_v1',JSON.stringify(list))}
+function refreshChatSelect(){var sel=$('#chatSelect'); var list=loadSessionList(); sel.innerHTML=''; var opt=document.createElement('option');opt.value='__current__';opt.textContent='(unsaved current chat)'; sel.appendChild(opt);
+ for(var i=0;i<list.length;i++){var o=document.createElement('option');o.value=list[i].id;o.textContent=list[i].title; sel.appendChild(o)} sel.value=currentSessionId||'__current__'}
+function newChat(){chat=[{role:'bot',text:'New chat. What should we do?'}]; currentSessionId=null; render(); refreshChatSelect()}
+function saveChat(){var firstUser=''; for(var i=0;i<chat.length;i++){if(chat[i].role==='user'){firstUser=chat[i].text;break}} var title=prompt('Name this chat:',(firstUser||'Untitled').slice(0,40))||(firstUser||'Untitled').slice(0,40);
+ var id=currentSessionId||String(Date.now()); localStorage.setItem(sessionKey(id),JSON.stringify(chat));
+ var list=loadSessionList().filter(function(s){return s.id!==id}); list.unshift({id:id,title:title}); saveSessionList(list); currentSessionId=id; refreshChatSelect(); alert('Saved!')}
+function deleteChat(){var sel=$('#chatSelect'); if(sel.value==='__current__'){alert('Select a saved chat to delete.');return}
+ if(!confirm('Delete this saved chat?'))return; localStorage.removeItem(sessionKey(sel.value)); saveSessionList(loadSessionList().filter(function(s){return s.id!==sel.value})); currentSessionId=null; refreshChatSelect()}
+$('#chatSelect').addEventListener('change',function(){var id=$('#chatSelect').value; if(id==='__current__'){currentSessionId=null;return}
+ var raw=localStorage.getItem(sessionKey(id)); if(!raw){alert('Missing chat data');return} chat=JSON.parse(raw); currentSessionId=id; render()})
+refreshChatSelect();
+/* autosave */
+function autosave(){try{localStorage.setItem('__bb_autosave__',JSON.stringify(chat))}catch(e){}}
+var _render_original=render; render=function(){_render_original(); autosave()}
+;(function(){var saved=localStorage.getItem('__bb_autosave__'); if(saved&&chat.length<=1){try{chat=JSON.parse(saved); render()}catch(e){}}})()
+function downloadChat(){var lines=''; for(var i=0;i<chat.length;i++){lines+=chat[i].role.toUpperCase()+': '+chat[i].text+'\n\n'} var blob=new Blob([lines],{type:'text/plain'});
+ var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='betterbot-chat.txt'; a.click(); setTimeout(function(){URL.revokeObjectURL(a.href)},1000)}
+
+/* ---------- mic + tts ---------- */
+var rec=null, listening=false;
+function toggleMic(){var btn=$('#micBtn'); var SR=window.SpeechRecognition||window.webkitSpeechRecognition; if(!SR){alert('Speech recognition not supported. Try Chrome.');return}
+ if(!rec){rec=new SR(); rec.lang='en-AU'; rec.interimResults=true; rec.maxAlternatives=1;
+   rec.onresult=function(e){var txt=''; for(var i=e.resultIndex;i<e.results.length;i++){txt+=e.results[i][0].transcript} $('#msg').value=txt};
+   rec.onend=function(){listening=false; btn.textContent='🎙️ Mic'; btn.classList.remove('ghost'); btn.classList.add('secondary')};
+   rec.onerror=function(){listening=false; btn.textContent='🎙️ Mic'; btn.classList.remove('ghost'); btn.classList.add('secondary')}} 
+ if(!listening){try{rec.start(); listening=true; btn.textContent='🛑 Stop'; btn.classList.remove('secondary'); btn.classList.add('ghost')}catch(e){}} else {try{rec.stop()}catch(e){} }}
+function toggleTTS(){speakReplies=!speakReplies; $('#ttsBtn').textContent=speakReplies?'🔊 Speak: On':'🔊 Speak: Off'}
+function speakText(t){try{speechSynthesis.cancel(); var u=new SpeechSynthesisUtterance(t); u.rate=1; u.pitch=1; u.lang='en-AU'; speechSynthesis.speak(u)}catch(e){}}
+
+/* ---------- music ---------- */
+var frame=$('#playerFrame'); function validUrl(u){try{var x=new URL(u); return x.protocol.indexOf('http')===0}catch(e){return false}}
+function ensureEmbed(url){try{var u=new URL(url); if(u.hostname==='open.spotify.com'&&u.pathname.indexOf('/embed')!==0){u.pathname='/embed'+u.pathname; return u.toString()} return url}catch(e){return url}}
+function setStation(u){var url=(u||'').trim(); if(!url){alert('Paste an embed URL.');return} url=ensureEmbed(url); if(!validUrl(url)){alert('Invalid URL');return} frame.src=url; localStorage.setItem('bb_station_url',url)}
+;(function(){var last=localStorage.getItem('bb_station_url'); if(last) setStation(last); else setStation('https://www.youtube.com/embed/videoseries?list=PLMC9KNkIncKtPzgY-5rmhvj7fax8fdxoj')})()
+
+/* ---------- theme toggle ---------- */
+var blueOn=true; document.getElementById('blueBtn').onclick=function(){var r=document.documentElement.style;
+ if(blueOn){r.setProperty('--accent','#9333ea'); r.setProperty('--accent2','#a855f7'); r.setProperty('--panel','#171421'); r.setProperty('--bg','#0c0a12'); this.textContent='Blue OFF'}
+ else{r.setProperty('--accent','#1e3a8a'); r.setProperty('--accent2','#2563eb'); r.setProperty('--panel','#0f172a'); r.setProperty('--bg','#0b1022'); this.textContent='Blue ON'} blueOn=!blueOn}
+
+/* ---------- PWA install + generator ---------- */
+var deferredPrompt=null; window.addEventListener('beforeinstallprompt',function(e){e.preventDefault(); deferredPrompt=e; var b=$('#installBtn'); b.style.display=''; b.onclick=function(){if(!deferredPrompt)return; deferredPrompt.prompt(); deferredPrompt=null; b.style.display='none'}})
+if('serviceWorker' in navigator){navigator.serviceWorker.register('service-worker.js').catch(function(){})}
+document.getElementById('makePwaBtn').addEventListener('click',async function(){
+ var filename=location.pathname.split('/').pop()||'app.html';
+ var manifest={name:"BetterBot DC",short_name:"BetterBot DC",description:"Super app with manual memory and provider fallback.",start_url:".",scope:"./",display:"standalone",theme_color:"#0f172a",background_color:"#0f172a",icons:[{src:"icons/icon-192.png",sizes:"192x192",type:"image/png",purpose:"any maskable"},{src:"icons/icon-512.png",sizes:"512x512",type:"image/png",purpose:"any maskable"}]};
+ var sw="const CACHE='betterbot-super-v1';const ASSETS=['./','"+filename+"','manifest.webmanifest','icons/icon-192.png','icons/icon-512.png'];self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS))) });self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k))))) });self.addEventListener('fetch',e=>{const url=new URL(e.request.url);const isAPI=/api\\.openai\\.com|api\\.deepseek\\.com|api-inference\\.huggingface\\.co/.test(url.host);if(isAPI)return; if(url.origin!==location.origin && !/\\.(css|js|png|jpg|jpeg|webp|svg)$/.test(url.pathname))return; e.respondWith(caches.match(e.request).then(c=>c||fetch(e.request).then(r=>{if(e.request.method==='GET'&&url.origin===location.origin){const copy=r.clone();caches.open(CACHE).then(c=>c.put(e.request,copy))}return r}))) })";
+ function save(name,text,type){var blob=new Blob([text],{type:type||'text/plain'}); var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; a.click(); setTimeout(function(){URL.revokeObjectURL(a.href)},1000)}
+ async function makePng(size){var c=document.createElement('canvas'); c.width=c.height=size; var x=c.getContext('2d'); x.fillStyle='#0f172a'; x.fillRect(0,0,size,size); x.beginPath(); x.arc(size/2,size/2,size*0.42,0,Math.PI*2); x.fillStyle='#2563eb'; x.fill(); x.fillStyle='#fff'; x.font=Math.round(size*0.28)+'px system-ui,-apple-system,Segoe UI,Roboto,sans-serif'; x.textAlign='center'; x.textBaseline='middle'; x.fillText('DC',size/2,size/2+size*0.02); return await new Promise(function(res){c.toBlob(res,'image/png')})}
+ var icon192=await makePng(192), icon512=await makePng(512);
+ save('manifest.webmanifest',JSON.stringify(manifest,null,2),'application/manifest+json'); save('service-worker.js',sw,'application/javascript');
+ function saveBlob(blob,name){var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; a.click(); setTimeout(function(){URL.revokeObjectURL(a.href)},1000)}
+ saveBlob(icon192,'icon-192.png'); saveBlob(icon512,'icon-512.png'); alert('Downloaded manifest, service-worker, and icons. Create an "icons" folder next to this file, move icons there, then open via localhost/HTTPS for Install.')})
+
+/* ---------- init ---------- */
+(async function init(){
+  setModeBadge('detecting…');
+  // try to arm WebLLM quickly; if it fails we’ll fall back to Lite in router
+  try{ await ensureLocalWebLLM(); }catch(e){ localMode='lite'; setModeBadge('Local (Lite)') }
+})();
+</script>
+</body></html>
