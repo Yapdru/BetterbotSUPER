@@ -781,5 +781,157 @@ setTimeout(() => {
   }, 150);
 })();
 </script>
+<!-- BetterBot: consolidated Pro Max (single greet, no tests, no dups) -->
+<script>
+(function () {
+  // prevent double-run if pasted twice
+  if (window.__bb_pro_max_once__) return;
+  window.__bb_pro_max_once__ = true;
+
+  const $ = (s) => document.querySelector(s);
+
+  // 1) Force Auto mode + clean badge
+  const prov = document.getElementById('provider');
+  if (prov) prov.value = 'auto';
+  const badge = document.getElementById('modeBadge');
+  if (badge) badge.textContent = 'Mode: Auto';
+
+  // 2) Remove/hide any Test button
+  (document.querySelector('button[onclick="testProvider()"]')
+    || document.getElementById('testBtn')
+    || document.querySelector('button[data-role="test"]'))?.remove();
+  // if some code still calls testProvider(), neutralize it
+  if (typeof window.testProvider === 'function') {
+    window.testProvider = () => { const d=$('#diag'); if (d) d.textContent=''; };
+  }
+
+  // 3) Remove the stock welcome bubble if it exists as first message
+  try {
+    if (Array.isArray(window.chat) && window.chat.length) {
+      const first = (window.chat[0]?.text || '').toLowerCase();
+      if (first.includes("hi!") && first.includes("i'm betterbot")) {
+        window.chat.shift();
+        if (typeof window.render === 'function') window.render();
+      }
+    }
+  } catch(_) {}
+
+  // 4) Temporary guard to block duplicate auto-greets from earlier snippets
+  let suppress = true;
+  if (Array.isArray(window.chat)) {
+    const origPush = window.chat.push;
+    window.chat.push = function (msg) {
+      if (suppress && msg && msg.role === 'user' &&
+          /i[’']?m betterbot pro max/i.test(msg.text || '')) {
+        return window.chat.length; // drop duplicate
+      }
+      return origPush.apply(window.chat, arguments);
+    };
+    // stop suppressing after startup settles
+    setTimeout(() => { suppress = false; }, 2000);
+  }
+
+  // 5) Single greeting (once) after page settles — no test prompts
+  setTimeout(async () => {
+    try {
+      const name = $('#name')?.value || 'friend';
+      const first = `Hello ${name}! I’m BetterBot Pro Max — ready to help.`;
+
+      // add as if user typed
+      if (Array.isArray(window.chat)) { window.chat.push({ role:'user', text:first }); }
+      if (typeof window.render === 'function') window.render();
+
+      // ask via your router (no explicit provider tests here)
+      const reply = await window.askSmart(first);
+      if (Array.isArray(window.chat)) { window.chat.push({ role:'bot', text:reply }); }
+      if (typeof window.render === 'function') window.render();
+      const diag = $('#diag'); if (diag) diag.textContent = '';
+      if (window.speakReplies) { try { window.speakText(reply); } catch(_) {} }
+    } catch (e) {
+      if (Array.isArray(window.chat)) {
+        window.chat.push({ role:'bot', text:'(startup error) ' + (e?.message || e) });
+      }
+      if (typeof window.render === 'function') window.render();
+      const diag = $('#diag'); if (diag) diag.textContent = (e?.message || e);
+    }
+  }, 600);
+})();
+</script>
+<!-- BetterBot: consolidated Pro Max (single greet, no tests, no dups) -->
+<script>
+(function () {
+  // prevent double-run if pasted twice
+  if (window.__bb_pro_max_once__) return;
+  window.__bb_pro_max_once__ = true;
+
+  const $ = (s) => document.querySelector(s);
+
+  // 1) Force Auto mode + clean badge
+  const prov = document.getElementById('provider');
+  if (prov) prov.value = 'auto';
+  const badge = document.getElementById('modeBadge');
+  if (badge) badge.textContent = 'Mode: Auto';
+
+  // 2) Remove/hide any Test button
+  (document.querySelector('button[onclick="testProvider()"]')
+    || document.getElementById('testBtn')
+    || document.querySelector('button[data-role="test"]'))?.remove();
+  // if some code still calls testProvider(), neutralize it
+  if (typeof window.testProvider === 'function') {
+    window.testProvider = () => { const d=$('#diag'); if (d) d.textContent=''; };
+  }
+
+  // 3) Remove the stock welcome bubble if it exists as first message
+  try {
+    if (Array.isArray(window.chat) && window.chat.length) {
+      const first = (window.chat[0]?.text || '').toLowerCase();
+      if (first.includes("hi!") && first.includes("i'm betterbot")) {
+        window.chat.shift();
+        if (typeof window.render === 'function') window.render();
+      }
+    }
+  } catch(_) {}
+
+  // 4) Temporary guard to block duplicate auto-greets from earlier snippets
+  let suppress = true;
+  if (Array.isArray(window.chat)) {
+    const origPush = window.chat.push;
+    window.chat.push = function (msg) {
+      if (suppress && msg && msg.role === 'user' &&
+          /i[’']?m betterbot pro max/i.test(msg.text || '')) {
+        return window.chat.length; // drop duplicate
+      }
+      return origPush.apply(window.chat, arguments);
+    };
+    // stop suppressing after startup settles
+    setTimeout(() => { suppress = false; }, 2000);
+  }
+
+  // 5) Single greeting (once) after page settles — no test prompts
+  setTimeout(async () => {
+    try {
+      const name = $('#name')?.value || 'friend';
+      const first = `Hello ${name}! I’m BetterBot Pro Max — ready to help.`;
+
+      // add as if user typed
+      if (Array.isArray(window.chat)) { window.chat.push({ role:'user', text:first }); }
+      if (typeof window.render === 'function') window.render();
+
+      // ask via your router (no explicit provider tests here)
+      const reply = await window.askSmart(first);
+      if (Array.isArray(window.chat)) { window.chat.push({ role:'bot', text:reply }); }
+      if (typeof window.render === 'function') window.render();
+      const diag = $('#diag'); if (diag) diag.textContent = '';
+      if (window.speakReplies) { try { window.speakText(reply); } catch(_) {} }
+    } catch (e) {
+      if (Array.isArray(window.chat)) {
+        window.chat.push({ role:'bot', text:'(startup error) ' + (e?.message || e) });
+      }
+      if (typeof window.render === 'function') window.render();
+      const diag = $('#diag'); if (diag) diag.textContent = (e?.message || e);
+    }
+  }, 600);
+})();
+</script>
 
 </body></html>
