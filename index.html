@@ -10,7 +10,8 @@
 <link rel="icon" type="image/png" sizes="32x32" href="icon-32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="icon-16.png">
 <link rel="manifest" href="manifest.webmanifest">
-<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
 <meta name="apple-mobile-web-app-title" content="BetterBotDC">
 <meta name="theme-color" content="#0b1022">
 
@@ -380,5 +381,405 @@ document.getElementById('makePwaBtn').addEventListener('click',async function(){
   // try to arm WebLLM quickly; if it fails we’ll fall back to Lite in router
   try{ await ensureLocalWebLLM(); }catch(e){ localMode='lite'; setModeBadge('Local (Lite)') }
 })();
+</script><!-- BetterBot Pro Max: auto provider + remove Test + auto-start -->
+<script>
+(function () {
+  // --- helpers to detect what we can use ---
+  const $ = (s) => document.querySelector(s);
+  const hasOpenAI = () => !!($('#oaKey')?.value || '').trim();
+  const hasDS     = () => !!($('#dsKey')?.value || '').trim();
+  const hasHF     = () => !!($('#hfKey')?.value || '').trim();
+  const hasWebLLM = () => !!(window.webllm && window.webllm.CreateMLCEngine);
+
+  function bestName() {
+    if (hasOpenAI()) return 'OpenAI';
+    if (hasDS())     return 'DeepSeek';
+    if (hasHF())     return 'Hugging Face';
+    if (hasWebLLM()) return 'Local (WebLLM)';
+    return 'Local (Lite)';
+  }
+
+  // --- set dropdown to Auto and update badge text ---
+  function setAutoModeUI() {
+    const prov = document.getElementById('provider');
+    if (prov) prov.value = 'auto';
+    const badge = document.getElementById('modeBadge');
+    if (badge) badge.textContent = 'Mode: Auto • Best = ' + bestName();
+  }
+
+  // --- remove any Test button in the UI ---
+  function removeTestBtn() {
+    const btn =
+      document.querySelector('button[onclick="testProvider()"]') ||
+      document.getElementById('testBtn') ||
+      document.querySelector('button[data-role="test"]');
+    if (btn) btn.remove();
+  }
+
+  // --- auto send a first message and render reply ---
+  async function autoStart() {
+    const first = "Hello " + (document.getElementById('name')?.value || "friend") + "! I’m BetterBot Pro Max — ready to help.";
+
+    // add as if user typed
+    window.chat.push({ role: 'user', text: first });
+    window.render();
+
+    try {
+      const reply = await window.askSmart(first);
+      window.chat.push({ role: 'bot', text: reply });
+      window.render();
+      if (window.speakReplies) window.speakText(reply);
+      document.getElementById('diag').textContent = '';
+    } catch (e) {
+      window.chat.push({ role: 'bot', text: '(startup error) ' + (e?.message || e) });
+      window.render();
+      document.getElementById('diag').textContent = (e?.message || e);
+    }
+  }
+
+  // Run once page scripts are ready
+  document.addEventListener('DOMContentLoaded', () => {
+    setAutoModeUI();
+    removeTestBtn();
+  });
+
+  // Give your existing init() a moment (WebLLM may still be loading), then start
+  setTimeout(() => {
+    setAutoModeUI();
+    autoStart();
+  }, 600);
+})();
 </script>
+
+</body></html>
+<script>
+function setAutoModeUI() {
+  const providerSel = document.getElementById('provider');
+  if (providerSel) providerSel.value = "auto"; // force Pro Max auto chain
+}
+
+function removeTestBtn() {
+  const btn = document.querySelector('button[onclick="testProvider()"]');
+  if (btn && btn.parentNode) btn.parentNode.removeChild(btn);
+}
+
+async function autoStart() {
+  try {
+    const first = "Hello " + (document.getElementById('name')?.value || "friend") + 
+                  "! I’m BetterBot Pro Max — ready to help.";
+    window.chat.push({ role: 'user', text: first });
+    window.render();
+
+    const reply = await window.askSmart(first);
+    window.chat.push({ role: 'bot', text: reply });
+    window.render();
+
+    if (window.speakReplies) window.speakText(reply);
+    document.getElementById('diag').textContent = '';
+  } catch (e) {
+    window.chat.push({ role: 'bot', text: '(startup error) ' + (e?.message || e) });
+    window.render();
+    document.getElementById('diag').textContent = (e?.message || e);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  setAutoModeUI();
+  removeTestBtn();
+});
+
+// wait a moment for WebLLM init, then auto greet
+setTimeout(() => {
+  setAutoModeUI();
+  autoStart();
+}, 600);
+</script>
+<!-- ===== BetterBot: Loading + Sign-in Gate + Beta Advanced ===== -->
+<script>
+(function () {
+  /* ---------- CONFIG ---------- */
+  const GOOGLE_CLIENT_ID = "REPLACE_ME.apps.googleusercontent.com"; // get one at console.cloud.google.com (OAuth -> Web client)
+  const BETA_EMAILS = ["Neeraj.raje@gmail.com"];                    // who gets Beta Advanced
+  const LOGO_SRC = "DRAR%20CARS%20Logo%20on%20Speedway.png";        // your logo in repo (space-safe)
+
+  /* ---------- STYLE ---------- */
+  const css = `
+  #bbGate{position:fixed;inset:0;background:#0b1022cc;backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;z-index:999999}
+  #bbCard{width:min(560px,92vw);background:#0f172a;border:1px solid #1f2937;border-radius:18px;padding:18px;color:#e5e7eb;box-shadow:0 10px 30px rgba(0,0,0,.4)}
+  #bbCard h3{margin:0 0 8px 0;font-size:18px}
+  #bbLogo{display:block;margin:0 auto 10px auto;width:96px;height:96px;border-radius:18px;background:#0b1022 url("${LOGO_SRC}") center/cover no-repeat;border:1px solid #1f2937}
+  #bbBar{height:10px;border-radius:999px;background:#111827;overflow:hidden;border:1px solid #1f2937}
+  #bbFill{height:100%;width:0;background:linear-gradient(90deg,#2563eb,#60a5fa);transition:width .25s ease}
+  #bbTip{margin-top:8px;font-size:12px;color:#93c5fd;text-align:center}
+  #bbBtns{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:14px}
+  .bbBtn{padding:10px 14px;border-radius:12px;border:1px solid #223047;background:#0b1324;color:#e5e7eb;cursor:pointer}
+  .bbBtn.primary{background:#2563eb;border-color:#1e40af}
+  .bbMuted{font-size:12px;color:#94a3b8;text-align:center;margin-top:8px}
+  #bbBetaBadge{margin-left:8px;padding:4px 8px;border-radius:999px;font-size:11px;background:#1d4ed81a;border:1px solid #1d4ed84d;color:#93c5fd}
+  `;
+  const st = document.createElement("style");
+  st.textContent = css;
+  document.head.appendChild(st);
+
+  /* ---------- DOM ---------- */
+  const gate = document.createElement("div");
+  gate.id = "bbGate";
+  gate.innerHTML = `
+    <div id="bbCard">
+      <div id="bbLogo"></div>
+      <h3 style="text-align:center">Loading BetterBot…</h3>
+      <div id="bbBar"><div id="bbFill"></div></div>
+      <div id="bbTip">Tip: You can toggle Blue/Purple theme anytime.</div>
+      <div id="bbBtns" style="display:none">
+        <div id="gsiContainer"></div>
+        <button id="bbGoogleBtn" class="bbBtn primary">Sign in with Google</button>
+        <button id="bbPasskeyBtn" class="bbBtn" disabled title="Needs server; coming soon">Use Passkey</button>
+      </div>
+      <div class="bbMuted">Signing in lets you access Beta Advanced (whitelisted accounts only).</div>
+    </div>`;
+  document.body.appendChild(gate);
+
+  /* ---------- PROGRESS + TIPS ---------- */
+  const tips = [
+    "Tip: Use /help for quick commands (timer, coin, roll, sum).",
+    "Tip: Music station remembers your last link.",
+    "Tip: ‘Remember last’ saves a message into manual memory.",
+    "Tip: Auto provider picks OpenAI → DeepSeek → HF → Local."
+  ];
+  let i = 0, p = 0;
+  const tipEl = document.getElementById("bbTip");
+  const fill = document.getElementById("bbFill");
+  const prog = setInterval(() => {
+    p = Math.min(90, p + Math.random() * 8);
+    fill.style.width = p + "%";
+    tipEl.textContent = tips[i++ % tips.length];
+  }, 700);
+
+  /* ---------- AUTH STATE ---------- */
+  function saveAuth(profile) { localStorage.setItem("__bb_auth__", JSON.stringify(profile)); }
+  function loadAuth() { try { return JSON.parse(localStorage.getItem("__bb_auth__")||"null") } catch(e){ return null } }
+  function isBeta(email) { return BETA_EMAILS.some(x => x.toLowerCase() === (email||"").toLowerCase()); }
+
+  /* ---------- GOOGLE (GIS) ---------- */
+  function loadGSI() {
+    return new Promise(res => {
+      const s = document.createElement("script");
+      s.src = "https://accounts.google.com/gsi/client";
+      s.async = true; s.defer = true; s.onload = res;
+      document.head.appendChild(s);
+    });
+  }
+  function parseJWT(token) {
+    const payload = token.split(".")[1];
+    const json = atob(payload.replace(/-/g,"+").replace(/_/g,"/"));
+    return JSON.parse(decodeURIComponent(escape(json)));
+  }
+  async function initGoogle() {
+    if (!GOOGLE_CLIENT_ID.startsWith("REPLACE_ME")) {
+      await loadGSI();
+      window.google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: (resp) => {
+          try {
+            const data = parseJWT(resp.credential);
+            const profile = { email: data.email, name: data.name || data.given_name || "User", picture: data.picture, beta: isBeta(data.email) };
+            saveAuth(profile);
+            afterSignIn(profile);
+          } catch(e) { alert("Google sign-in failed."); }
+        }
+      });
+      // Button render for visual (still keep our fallback button)
+      if (document.getElementById("gsiContainer")) {
+        window.google.accounts.id.renderButton(document.getElementById("gsiContainer"), { theme: "outline", size: "large", shape:"pill", text:"continue_with", width: 260 });
+      }
+      document.getElementById("bbGoogleBtn").onclick = () => window.google.accounts.id.prompt();
+    } else {
+      // Dev fallback if no Client ID: prompt for email
+      document.getElementById("bbGoogleBtn").onclick = () => {
+        const email = prompt("Dev sign-in: enter your Google email (demo only)");
+        if (!email) return;
+        const profile = { email, name: email.split("@")[0], beta: isBeta(email) };
+        saveAuth(profile); afterSignIn(profile);
+      };
+    }
+  }
+
+  /* ---------- AFTER SIGN-IN ---------- */
+  function afterSignIn(profile) {
+    // finish progress
+    clearInterval(prog); fill.style.width = "100%";
+    // set name field if present
+    const nameInput = document.getElementById("name");
+    if (nameInput && profile?.name) nameInput.value = profile.name;
+
+    // Add/Update Beta badge in header
+    const headerRow = document.querySelector(".header .row");
+    if (headerRow && !document.getElementById("bbBetaBadge")) {
+      const b = document.createElement("span");
+      b.id = "bbBetaBadge";
+      b.textContent = profile.beta ? "Beta Advanced ✓" : "Beta Locked";
+      headerRow.appendChild(b);
+    } else if (profile) {
+      const b = document.getElementById("bbBetaBadge");
+      if (b) b.textContent = profile.beta ? "Beta Advanced ✓" : "Beta Locked";
+    }
+
+    // Gate Beta-only actions: add a tiny guard function on window
+    window.requireBeta = function () {
+      const auth = loadAuth();
+      if (auth?.beta) return true;
+      alert("Beta Advanced is only available to approved accounts.\n\nPlease sign in with a beta-enabled Google account.");
+      return false;
+    };
+
+    // hide gate
+    setTimeout(() => { gate.remove(); }, 350);
+  }
+
+  /* ---------- SHOW SIGN-IN OR BYPASS ---------- */
+  function showSignIn() {
+    clearInterval(prog); fill.style.width = "92%";
+    tipEl.textContent = "Sign in to continue (Google recommended).";
+    document.getElementById("bbBtns").style.display = "";
+
+    initGoogle(); // wires Google button (or dev fallback)
+  }
+
+  // If already signed in, skip straight through
+  const existing = loadAuth();
+  if (existing) {
+    // put a badge immediately
+    const headerReady = () => {
+      const headerRow = document.querySelector(".header .row");
+      if (!headerRow) return false;
+      if (!document.getElementById("bbBetaBadge")) {
+        const b = document.createElement("span"); b.id = "bbBetaBadge";
+        b.textContent = existing.beta ? "Beta Advanced ✓" : "Beta Locked";
+        headerRow.appendChild(b);
+      }
+      return true;
+    };
+    const i = setInterval(() => { if (headerReady()) { clearInterval(i); } }, 150);
+
+    afterSignIn(existing);
+  } else {
+    // animate a bit, then ask to sign in
+    setTimeout(showSignIn, 1600);
+  }
+
+  /* ---------- OPTIONAL: protect Beta UI pieces ----------
+     Wrap any Beta-only features with:
+       if (!window.requireBeta || !window.requireBeta()) return;
+  ------------------------------------------------------- */
+})();
+</script>
+<!-- ===== Beta Advanced: enable for any Google sign-in + toggle panel ===== -->
+<script>
+(function () {
+  /* ---------- auth helpers (match your gate storage) ---------- */
+  const AUTH_KEY = "__bb_auth__";
+  const getAuth = () => { try { return JSON.parse(localStorage.getItem(AUTH_KEY) || "null"); } catch { return null; } };
+  const setAuth = (obj) => localStorage.setItem(AUTH_KEY, JSON.stringify(obj || null));
+
+  /* ---------- styles for the panel ---------- */
+  const css = `
+  #bbBetaBtn{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:12px;
+             background:#1f2937;border:1px solid #334155;color:#e5e7eb;cursor:pointer}
+  #bbBetaPanel{position:fixed;inset:auto 12px 12px auto; right:12px; bottom:12px;
+               width:min(420px,92vw); background:#0f172a; color:#e5e7eb; border:1px solid #1f2937;
+               border-radius:14px; padding:14px; box-shadow:0 12px 28px rgba(0,0,0,.35); display:none; z-index:99998}
+  #bbBetaPanel h4{margin:0 0 8px 0;font-size:16px}
+  #bbBetaClose{float:right; cursor:pointer; opacity:.8}
+  #bbBetaPanel .row{display:flex; gap:8px; flex-wrap:wrap; margin:8px 0}
+  #bbBetaPanel .pill{font-size:12px;padding:6px 10px;border-radius:999px;background:#1d4ed81a;border:1px solid #1d4ed84d}
+  `;
+  const st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
+
+  /* ---------- build panel UI ---------- */
+  function ensurePanel() {
+    if (document.getElementById('bbBetaPanel')) return;
+    const panel = document.createElement('div');
+    panel.id = 'bbBetaPanel';
+    panel.innerHTML = `
+      <div>
+        <span id="bbBetaClose">✖</span>
+        <h4>Beta Advanced</h4>
+        <div class="row">
+          <span class="pill">Auto Provider: OpenAI → DeepSeek → HF → Local → Lite</span>
+          <span class="pill">Manual Memory tools enabled</span>
+        </div>
+        <div class="row">
+          <button id="bbForceAuto" class="pill" style="cursor:pointer">Force Auto Mode</button>
+          <button id="bbClearAuth" class="pill" style="cursor:pointer">Sign out</button>
+        </div>
+        <div style="font-size:12px;opacity:.8;margin-top:6px">Signed in as: <span id="bbWho"></span></div>
+      </div>`;
+    document.body.appendChild(panel);
+
+    // wire actions
+    panel.querySelector('#bbBetaClose').onclick = () => panel.style.display = 'none';
+    panel.querySelector('#bbForceAuto').onclick = () => {
+      const sel = document.getElementById('provider');
+      if (sel) sel.value = 'auto';
+      alert('Provider set to Auto (Pro Max).');
+    };
+    panel.querySelector('#bbClearAuth').onclick = () => {
+      localStorage.removeItem(AUTH_KEY);
+      alert('Signed out. Reloading…');
+      location.reload();
+    };
+  }
+
+  function openPanel() {
+    ensurePanel();
+    const who = getAuth();
+    const whoEl = document.getElementById('bbWho');
+    if (whoEl) whoEl.textContent = (who?.email || who?.name || 'unknown');
+    const p = document.getElementById('bbBetaPanel');
+    if (p) p.style.display = 'block';
+  }
+
+  /* ---------- show button in header when signed in ---------- */
+  function ensureButton() {
+    if (document.getElementById('bbBetaBtn')) return;
+    const row = document.querySelector('.header .row');
+    if (!row) return;
+    const btn = document.createElement('button');
+    btn.id = 'bbBetaBtn';
+    btn.innerHTML = 'Beta Advanced';
+    btn.onclick = openPanel;
+    row.appendChild(btn);
+  }
+
+  /* ---------- main: upgrade auth to beta if signed in ---------- */
+  function promoteAnyGoogleToBeta() {
+    const a = getAuth();
+    if (!a) return false;
+    // If user has an email (Google sign-in), grant beta
+    if (a.email && !a.beta) {
+      a.beta = true;
+      setAuth(a);
+    }
+    return true;
+  }
+
+  /* ---------- startup loop: wait until gate saves auth, then patch ---------- */
+  let tries = 0;
+  const tick = setInterval(() => {
+    tries++;
+    const hasAuth = promoteAnyGoogleToBeta();
+    if (hasAuth) {
+      // add “Beta Advanced” controls
+      ensurePanel();
+      ensureButton();
+      // also adjust header badge text if the gate added one
+      const badge = document.getElementById('bbBetaBadge');
+      if (badge) badge.textContent = 'Beta Advanced ✓';
+      clearInterval(tick);
+    }
+    if (tries > 60) clearInterval(tick); // ~9s safety
+  }, 150);
+})();
+</script>
+
 </body></html>
