@@ -1048,4 +1048,131 @@ setTimeout(() => {
     }
   </script>
   <!-- ===== End Provider Launcher ===== -->
+    <script>
+    // === CANCEL OLD PROVIDER LAUNCHER IF PRESENT ===
+    document.addEventListener("DOMContentLoaded", () => {
+      // Find any old Provider Launcher cards and remove them
+      document.querySelectorAll(".card h3").forEach(h3 => {
+        if (h3.textContent.includes("Provider Launcher")) {
+          h3.parentElement.remove();
+        }
+      });
+
+      // === NEW PROVIDER LAUNCHER CARD ===
+      const uploadCard = Array.from(document.querySelectorAll(".card h3"))
+        .find(h3 => h3.textContent.includes("Upload a File"));
+      if (!uploadCard) return;
+
+      const container = uploadCard.parentElement;
+      const newCard = document.createElement("div");
+      newCard.className = "card";
+      newCard.innerHTML = `
+        <h3>🚀 Provider Launcher (no API keys)</h3>
+        <p class="muted">
+          Take your Title/Style/Voice/Lyrics and send them to external AI providers.<br>
+          Options: Copy prompt, download prompt, download lyrics, or open a provider (auto-copies prompt).
+        </p>
+
+        <div style="margin:8px 0;">
+          <button onclick="copyPrompt()">📋 Copy Prompt</button>
+          <button onclick="downloadPrompt()">⬇️ Download Prompt</button>
+          <button onclick="downloadLyrics()">⬇️ Download Lyrics</button>
+          <span id="prov-msg" class="muted"></span>
+        </div>
+
+        <h4>🎶 Music / Song Generators</h4>
+        <ul>
+          <li><a href="#" onclick="openProvider('https://www.udio.com/'); return false;">Udio</a></li>
+          <li><a href="#" onclick="openProvider('https://suno.com/'); return false;">Suno</a></li>
+          <li><a href="#" onclick="openProvider('https://www.beatoven.ai/'); return false;">Beatoven</a></li>
+          <li><a href="#" onclick="openProvider('https://soundraw.io/'); return false;">SOUNDRAW</a></li>
+        </ul>
+
+        <h4>🖼️ Image / Cover Art</h4>
+        <ul>
+          <li><a href="#" onclick="openProvider('https://playground.com/'); return false;">Playground AI</a></li>
+          <li><a href="#" onclick="openProvider('https://lexica.art/'); return false;">Lexica</a></li>
+          <li><a href="#" onclick="openProvider('https://www.craiyon.com/'); return false;">Craiyon</a></li>
+        </ul>
+
+        <h4>🎞️ Video Tools</h4>
+        <ul>
+          <li><a href="#" onclick="openProvider('https://pika.art/'); return false;">Pika Labs</a></li>
+          <li><a href="#" onclick="openProvider('https://runwayml.com/'); return false;">Runway</a></li>
+          <li><a href="#" onclick="openProvider('https://www.capcut.com/'); return false;">CapCut Web</a></li>
+          <li><a href="#" onclick="openProvider('https://www.canva.com/'); return false;">Canva</a></li>
+        </ul>
+      `;
+      container.insertAdjacentElement("afterend", newCard);
+    });
+
+    // === Shared Helper Functions ===
+    function buildPrompt(){
+      const title  = (document.getElementById('msc-title')?.value || 'Untitled').trim();
+      const style  = (document.getElementById('msc-style')?.value || 'pop').trim();
+      const voice  = (document.getElementById('msc-voice')?.value || 'female').trim();
+      const lyrics = (document.getElementById('msc-lyrics')?.value || '').trim();
+
+      const lines = [];
+      lines.push(\`Create a \${style} song titled "\${title}" with \${voice} vocals.\`);
+      lines.push("Keep it clean, uplifting, and family-friendly.");
+      if (lyrics) {
+        lines.push("Use these lyrics (line-preserving):\\n" + lyrics);
+      } else {
+        lines.push("Generate simple, positive, singable lyrics about shining again.");
+      }
+      return lines.join('\\n');
+    }
+
+    async function copyPrompt(){
+      const prompt = buildPrompt();
+      try {
+        await navigator.clipboard.writeText(prompt);
+        setMsg("📋 Prompt copied to clipboard.");
+      } catch {
+        setMsg("⚠️ Could not copy. Use ⬇️ Download Prompt instead.");
+      }
+    }
+
+    async function openProvider(url){
+      const prompt = buildPrompt();
+      try {
+        await navigator.clipboard.writeText(prompt);
+        setMsg("✅ Prompt copied. Opening provider…");
+      } catch {
+        setMsg("⚠️ Could not copy. Use ⬇️ Download Prompt.");
+      }
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
+
+    function downloadPrompt(){
+      const prompt = buildPrompt();
+      downloadText('prompt.txt', prompt);
+      setMsg("⬇️ prompt.txt downloaded.");
+    }
+
+    function downloadLyrics(){
+      const lyrics = (document.getElementById('msc-lyrics')?.value || '').trim();
+      if (!lyrics) { setMsg("⚠️ No lyrics to download."); return; }
+      downloadText('lyrics.txt', lyrics);
+      setMsg("⬇️ lyrics.txt downloaded.");
+    }
+
+    function downloadText(filename, text){
+      const blob = new Blob([text], { type: 'text/plain' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    }
+
+    function setMsg(t){
+      const el = document.getElementById('prov-msg');
+      if (!el) return;
+      el.textContent = t;
+      setTimeout(()=>{ el.textContent = ""; }, 3000);
+    }
+  </script>
 </body></html>
