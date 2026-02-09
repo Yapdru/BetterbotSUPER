@@ -1,5 +1,8 @@
+"use client"
+
 import Image from "next/image"
 import { Gauge, Fuel, Zap, ArrowRight } from "lucide-react"
+import { useScrollAnimation } from "@/hooks/use-scroll-animation"
 
 const cars = [
   {
@@ -9,7 +12,8 @@ const cars = [
     speed: "340 km/h",
     power: "780 HP",
     type: "V10 Twin-Turbo",
-    highlight: "primary",
+    highlight: "primary" as const,
+    description: "Raw power meets aerodynamic precision in this track-ready beast.",
   },
   {
     name: "Summit SUV",
@@ -18,7 +22,8 @@ const cars = [
     speed: "250 km/h",
     power: "450 HP",
     type: "Hybrid V6",
-    highlight: "secondary",
+    highlight: "secondary" as const,
+    description: "Conquer any terrain with luxury and intelligent hybrid efficiency.",
   },
   {
     name: "Volt Electric",
@@ -27,26 +32,106 @@ const cars = [
     speed: "280 km/h",
     power: "600 HP",
     type: "Dual Motor EV",
-    highlight: "primary",
+    highlight: "primary" as const,
+    description: "Zero emissions, maximum thrill. The future of driving is here.",
   },
 ]
 
-export function FeaturedCars() {
+function CarCard({ car, index }: { car: (typeof cars)[0]; index: number }) {
+  const [ref, visible] = useScrollAnimation<HTMLElement>()
+  const isPrimary = car.highlight === "primary"
+
   return (
-    <section id="cars" className="relative py-24">
+    <article
+      ref={ref}
+      className={`reveal ${visible ? "visible" : ""} stagger-${index + 1}`}
+    >
+      <div
+        className={`group relative h-full overflow-hidden rounded-2xl border border-border/50 bg-card transition-all duration-500 hover:-translate-y-2 ${
+          isPrimary ? "hover:border-primary/30" : "hover:border-secondary/30"
+        }`}
+      >
+        {/* Image */}
+        <div className="relative aspect-[16/10] overflow-hidden">
+          <Image
+            src={car.image}
+            alt={car.name}
+            fill
+            className="object-cover transition-transform duration-700 group-hover:scale-110"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-card via-card/20 to-transparent" />
+          <span
+            className={`absolute top-4 left-4 rounded-full px-3 py-1.5 text-xs font-semibold backdrop-blur-sm ${
+              isPrimary
+                ? "bg-primary/20 text-primary border border-primary/20"
+                : "bg-secondary/20 text-secondary border border-secondary/20"
+            }`}
+          >
+            {car.category}
+          </span>
+        </div>
+
+        <div className="p-6">
+          <h3 className="font-display text-xl font-bold text-foreground">
+            {car.name}
+          </h3>
+          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+            {car.description}
+          </p>
+
+          {/* Specs */}
+          <div className="mt-5 flex gap-4">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Gauge className="h-4 w-4 text-primary" />
+              <span>{car.speed}</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Zap className="h-4 w-4 text-secondary" />
+              <span>{car.power}</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Fuel className="h-4 w-4 text-muted-foreground" />
+              <span>{car.type}</span>
+            </div>
+          </div>
+
+          <button
+            className={`mt-6 flex w-full items-center justify-center gap-2 rounded-xl border py-3 text-sm font-semibold transition-all ${
+              isPrimary
+                ? "border-primary/20 bg-primary/5 text-foreground hover:border-primary/40 hover:bg-primary/10 hover:text-primary"
+                : "border-secondary/20 bg-secondary/5 text-foreground hover:border-secondary/40 hover:bg-secondary/10 hover:text-secondary"
+            }`}
+          >
+            Learn More
+            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+          </button>
+        </div>
+      </div>
+    </article>
+  )
+}
+
+export function FeaturedCars() {
+  const [ref, visible] = useScrollAnimation<HTMLDivElement>()
+
+  return (
+    <section id="cars" className="relative py-28">
       <div className="mx-auto max-w-7xl px-6">
         {/* Section header */}
-        <div className="mb-16 max-w-2xl">
-          <span className="text-sm font-semibold uppercase tracking-widest text-primary">
+        <div
+          ref={ref}
+          className={`reveal mb-16 max-w-2xl ${visible ? "visible" : ""}`}
+        >
+          <span className="text-sm font-semibold uppercase tracking-[0.2em] text-primary">
             Featured Vehicles
           </span>
-          <h2 className="mt-3 font-display text-4xl font-bold tracking-tight text-foreground md:text-5xl">
+          <h2 className="mt-4 font-display text-4xl font-bold tracking-tight text-foreground md:text-5xl">
             <span className="text-balance">
               Cars That Define the{" "}
-              <span className="text-primary">Future</span>
+              <span className="text-primary glow-text-blue">Future</span>
             </span>
           </h2>
-          <p className="mt-4 text-lg leading-relaxed text-muted-foreground">
+          <p className="mt-5 text-lg leading-relaxed text-muted-foreground">
             From thunderous supercars to intelligent electric vehicles, explore
             the machines that push the boundaries of what is possible.
           </p>
@@ -54,56 +139,8 @@ export function FeaturedCars() {
 
         {/* Cars grid */}
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-          {cars.map((car) => (
-            <article
-              key={car.name}
-              className="group overflow-hidden rounded-2xl border border-border/50 bg-card transition-all hover:border-primary/30 hover:glow-blue"
-            >
-              <div className="relative aspect-[4/3] overflow-hidden">
-                <Image
-                  src={car.image}
-                  alt={car.name}
-                  fill
-                  className="object-cover transition-transform duration-500 group-hover:scale-110"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-card via-transparent to-transparent" />
-                <span
-                  className={`absolute top-4 left-4 rounded-full px-3 py-1 text-xs font-semibold ${
-                    car.highlight === "primary"
-                      ? "bg-primary/20 text-primary"
-                      : "bg-secondary/20 text-secondary"
-                  }`}
-                >
-                  {car.category}
-                </span>
-              </div>
-
-              <div className="p-6">
-                <h3 className="font-display text-xl font-bold text-foreground">
-                  {car.name}
-                </h3>
-
-                <div className="mt-4 flex gap-4">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Gauge className="h-4 w-4 text-primary" />
-                    {car.speed}
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Zap className="h-4 w-4 text-secondary" />
-                    {car.power}
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Fuel className="h-4 w-4 text-muted-foreground" />
-                    {car.type}
-                  </div>
-                </div>
-
-                <button className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg border border-border bg-muted/50 px-4 py-2.5 text-sm font-semibold text-foreground transition-all hover:border-primary/50 hover:bg-primary/10 hover:text-primary">
-                  Learn More
-                  <ArrowRight className="h-4 w-4" />
-                </button>
-              </div>
-            </article>
+          {cars.map((car, i) => (
+            <CarCard key={car.name} car={car} index={i} />
           ))}
         </div>
       </div>

@@ -9,14 +9,23 @@ const spaceGrotesk = Space_Grotesk({
 })
 
 export const metadata: Metadata = {
-  title: "DRAR CARS - Cars & Gadgets | AI-Powered Experience",
+  title: "DRAR CARS — Innovative Technology Solutions | Cars & Gadgets",
   description:
-    "Explore the world of premium cars and cutting-edge gadgets. Powered by BetterBot AI assistant for the ultimate automotive and tech experience.",
-  keywords: ["cars", "gadgets", "AI", "automotive", "technology", "DRAR CARS"],
+    "DRAR CARS is a cutting-edge technology company offering AI solutions, premium cars, and innovative gadgets. Powered by BetterBot AI assistant.",
+  keywords: [
+    "cars",
+    "gadgets",
+    "AI",
+    "automotive",
+    "technology",
+    "DRAR CARS",
+    "software development",
+    "Sydney",
+  ],
 }
 
 export const viewport: Viewport = {
-  themeColor: "#0a1628",
+  themeColor: "#0c1320",
   width: "device-width",
   initialScale: 1,
 }

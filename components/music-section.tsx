@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { Music, Radio, ExternalLink, Link2 } from "lucide-react"
+import { useScrollAnimation } from "@/hooks/use-scroll-animation"
 
 const stations = [
   {
@@ -19,10 +20,7 @@ const stations = [
 function ensureEmbed(url: string): string {
   try {
     const u = new URL(url)
-    if (
-      u.hostname === "open.spotify.com" &&
-      !u.pathname.startsWith("/embed")
-    ) {
+    if (u.hostname === "open.spotify.com" && !u.pathname.startsWith("/embed")) {
       u.pathname = "/embed" + u.pathname
       return u.toString()
     }
@@ -32,7 +30,42 @@ function ensureEmbed(url: string): string {
   }
 }
 
+const providerGroups = [
+  {
+    title: "Music / Song Generators",
+    providers: [
+      { name: "SOUNDRAW", url: "https://soundraw.io/" },
+      { name: "Beatoven", url: "https://www.beatoven.ai/" },
+      { name: "Suno", url: "https://suno.com/" },
+      { name: "Udio", url: "https://www.udio.com/" },
+    ],
+    color: "secondary" as const,
+  },
+  {
+    title: "Image / Cover Art",
+    providers: [
+      { name: "Craiyon", url: "https://www.craiyon.com/" },
+      { name: "Lexica", url: "https://lexica.art/" },
+      { name: "Playground AI", url: "https://playground.com/" },
+    ],
+    color: "primary" as const,
+  },
+  {
+    title: "Video Tools",
+    providers: [
+      { name: "Canva", url: "https://www.canva.com/" },
+      { name: "CapCut", url: "https://www.capcut.com/" },
+      { name: "Runway", url: "https://runwayml.com/" },
+      { name: "Pika Labs", url: "https://pika.art/" },
+    ],
+    color: "secondary" as const,
+  },
+]
+
 export function MusicSection() {
+  const [headerRef, headerVisible] = useScrollAnimation<HTMLDivElement>()
+  const [playerRef, playerVisible] = useScrollAnimation<HTMLDivElement>()
+  const [toolsRef, toolsVisible] = useScrollAnimation<HTMLDivElement>()
   const [currentStation, setCurrentStation] = useState(stations[0].url)
   const [customUrl, setCustomUrl] = useState("")
 
@@ -49,33 +82,47 @@ export function MusicSection() {
   }
 
   return (
-    <section id="music" className="relative py-24">
-      <div className="mx-auto max-w-7xl px-6">
+    <section id="music" className="relative py-28">
+      {/* Background accent */}
+      <div className="absolute left-1/2 top-0 h-80 w-80 -translate-x-1/2 rounded-full bg-secondary/5 blur-[120px]" />
+
+      <div className="relative mx-auto max-w-7xl px-6">
+        {/* Section header */}
+        <div
+          ref={headerRef}
+          className={`reveal mb-16 text-center ${headerVisible ? "visible" : ""}`}
+        >
+          <span className="text-sm font-semibold uppercase tracking-[0.2em] text-secondary">
+            Drive Vibes & AI Tools
+          </span>
+          <h2 className="mt-4 font-display text-4xl font-bold tracking-tight text-foreground md:text-5xl">
+            <span className="text-balance">
+              Music{" "}
+              <span className="text-secondary glow-text-green">Station</span> &
+              Creative Tools
+            </span>
+          </h2>
+        </div>
+
         <div className="grid gap-12 lg:grid-cols-2">
           {/* Music player */}
-          <div>
-            <span className="text-sm font-semibold uppercase tracking-widest text-secondary">
-              Drive Vibes
-            </span>
-            <h2 className="mt-3 font-display text-4xl font-bold tracking-tight text-foreground">
-              <span className="text-balance">
-                Music <span className="text-secondary">Station</span>
-              </span>
-            </h2>
-            <p className="mt-4 text-lg leading-relaxed text-muted-foreground">
-              Set the mood for your drive. Choose a station or paste your own
-              embed URL.
-            </p>
+          <div
+            ref={playerRef}
+            className={`reveal-left ${playerVisible ? "visible" : ""}`}
+          >
+            <h3 className="mb-6 font-display text-xl font-bold text-foreground">
+              Set the mood for your drive
+            </h3>
 
-            <div className="mt-8 flex flex-wrap gap-3">
+            <div className="flex flex-wrap gap-2">
               {stations.map((station) => (
                 <button
                   key={station.name}
                   onClick={() => setCurrentStation(station.url)}
-                  className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all ${
+                  className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-all ${
                     currentStation === station.url
-                      ? "bg-secondary/20 text-secondary border border-secondary/30 glow-green"
-                      : "border border-border bg-muted text-muted-foreground hover:text-foreground hover:border-secondary/30"
+                      ? "border border-secondary/30 bg-secondary/15 text-secondary"
+                      : "border border-border bg-muted/50 text-muted-foreground hover:border-secondary/20 hover:text-foreground"
                   }`}
                 >
                   {station.type === "YouTube" ? (
@@ -100,10 +147,10 @@ export function MusicSection() {
               />
               <button
                 onClick={handleCustomUrl}
-                className="flex items-center gap-2 rounded-xl border border-border bg-muted px-4 py-2.5 text-sm font-semibold text-muted-foreground transition-all hover:border-secondary/50 hover:text-secondary"
+                className="flex items-center gap-2 rounded-xl border border-border bg-muted/50 px-4 py-2.5 text-sm font-medium text-muted-foreground transition-all hover:border-secondary/30 hover:text-secondary"
               >
                 <Link2 className="h-4 w-4" />
-                Use Link
+                <span className="hidden sm:inline">Use Link</span>
               </button>
             </div>
 
@@ -121,94 +168,55 @@ export function MusicSection() {
           </div>
 
           {/* Provider launcher */}
-          <div>
-            <span className="text-sm font-semibold uppercase tracking-widest text-primary">
-              AI Tools
-            </span>
-            <h2 className="mt-3 font-display text-4xl font-bold tracking-tight text-foreground">
-              <span className="text-balance">
-                Provider <span className="text-primary">Launcher</span>
-              </span>
-            </h2>
-            <p className="mt-4 text-lg leading-relaxed text-muted-foreground">
+          <div
+            ref={toolsRef}
+            className={`reveal-right ${toolsVisible ? "visible" : ""}`}
+          >
+            <h3 className="mb-6 font-display text-xl font-bold text-foreground">
+              AI Creative Tools
+            </h3>
+            <p className="mb-6 text-sm leading-relaxed text-muted-foreground">
               Access external AI providers for music, images, and video
               creation. No API keys required.
             </p>
 
-            <div className="mt-8 flex flex-col gap-6">
-              <ProviderGroup
-                title="Music / Song Generators"
-                providers={[
-                  { name: "SOUNDRAW", url: "https://soundraw.io/" },
-                  { name: "Beatoven", url: "https://www.beatoven.ai/" },
-                  { name: "Suno", url: "https://suno.com/" },
-                  { name: "Udio", url: "https://www.udio.com/" },
-                ]}
-                color="secondary"
-              />
-              <ProviderGroup
-                title="Image / Cover Art"
-                providers={[
-                  { name: "Craiyon", url: "https://www.craiyon.com/" },
-                  { name: "Lexica", url: "https://lexica.art/" },
-                  { name: "Playground AI", url: "https://playground.com/" },
-                ]}
-                color="primary"
-              />
-              <ProviderGroup
-                title="Video Tools"
-                providers={[
-                  { name: "Canva", url: "https://www.canva.com/" },
-                  { name: "CapCut", url: "https://www.capcut.com/" },
-                  { name: "Runway", url: "https://runwayml.com/" },
-                  { name: "Pika Labs", url: "https://pika.art/" },
-                ]}
-                color="secondary"
-              />
+            <div className="flex flex-col gap-6">
+              {providerGroups.map((group) => {
+                const isPrimary = group.color === "primary"
+                return (
+                  <div key={group.title}>
+                    <h4
+                      className={`mb-3 text-xs font-semibold uppercase tracking-widest ${
+                        isPrimary ? "text-primary" : "text-secondary"
+                      }`}
+                    >
+                      {group.title}
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                      {group.providers.map((p) => (
+                        <a
+                          key={p.name}
+                          href={p.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={`flex items-center gap-2 rounded-lg border px-3.5 py-2 text-sm font-medium transition-all ${
+                            isPrimary
+                              ? "border-primary/15 bg-primary/5 text-foreground hover:border-primary/30 hover:bg-primary/10 hover:text-primary"
+                              : "border-secondary/15 bg-secondary/5 text-foreground hover:border-secondary/30 hover:bg-secondary/10 hover:text-secondary"
+                          }`}
+                        >
+                          {p.name}
+                          <ExternalLink className="h-3 w-3 opacity-40" />
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )
+              })}
             </div>
           </div>
         </div>
       </div>
     </section>
-  )
-}
-
-function ProviderGroup({
-  title,
-  providers,
-  color,
-}: {
-  title: string
-  providers: { name: string; url: string }[]
-  color: "primary" | "secondary"
-}) {
-  return (
-    <div>
-      <h3
-        className={`mb-3 text-sm font-semibold ${
-          color === "primary" ? "text-primary" : "text-secondary"
-        }`}
-      >
-        {title}
-      </h3>
-      <div className="flex flex-wrap gap-2">
-        {providers.map((p) => (
-          <a
-            key={p.name}
-            href={p.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-all ${
-              color === "primary"
-                ? "border-primary/20 bg-primary/5 text-foreground hover:border-primary/40 hover:bg-primary/10 hover:text-primary"
-                : "border-secondary/20 bg-secondary/5 text-foreground hover:border-secondary/40 hover:bg-secondary/10 hover:text-secondary"
-            }`}
-          >
-            {p.name}
-            <ExternalLink className="h-3 w-3 opacity-50" />
-          </a>
-        ))}
-      </div>
-    </div>
   )
 }
