@@ -418,7 +418,57 @@ body.zap-mode { background: var(--bg); }
     <h2 style="font-size:20px;margin-bottom:4px">⚡ BetterBot Plans</h2>
     <p class="small" style="margin-bottom:0">Pick the plan that fits you. Plans unlock features in this browser/PWA instantly.</p>
     <div class="plans-grid" id="plansGrid"></div>
-    <p class="small" style="margin-top:14px;text-align:center">Plans are demo/local only — no real payment processing. Your plan is stored in this browser.</p>
+    <p class="small" style="margin-top:14px;text-align:center;color:var(--muted)">🔒 Payments powered by <b>Stripe</b> — secure, encrypted, never stored here.</p>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     PAYMENT SUCCESS MODAL
+════════════════════════════════════════ -->
+<div class="modal-overlay" id="paymentSuccessModal">
+  <div class="modal-box" style="max-width:380px;text-align:center">
+    <div id="psIcon" style="font-size:52px;margin-bottom:8px">🎉</div>
+    <h2 id="psTitle" style="font-size:20px;margin-bottom:8px">Payment Successful!</h2>
+    <p id="psMsg" class="small" style="margin-bottom:14px;color:var(--muted)"></p>
+    <div style="background:var(--surface2);border-radius:10px;padding:10px 16px;margin-bottom:16px;font-size:13px">
+      Active plan: <span id="psPlanName" style="font-weight:700;color:var(--accent)"></span>
+    </div>
+    <button class="btn" style="width:100%;justify-content:center" onclick="document.getElementById('paymentSuccessModal').classList.remove('open');renderPlansGrid()">
+      ✓ Start Using BetterBot
+    </button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     STRIPE SETUP INSTRUCTIONS MODAL
+════════════════════════════════════════ -->
+<div class="modal-overlay" id="stripeSetupModal">
+  <div class="modal-box" style="max-width:480px">
+    <button class="modal-close" onclick="document.getElementById('stripeSetupModal').classList.remove('open')">✕</button>
+    <h2 style="font-size:18px;margin-bottom:4px">⚙️ Stripe Not Configured Yet</h2>
+    <p class="small" style="margin-bottom:12px">Selected plan: <b id="stripePlanName"></b></p>
+    <div style="background:var(--surface2);border-radius:10px;padding:14px;font-size:12px;line-height:1.9">
+      <b>To activate real payments, follow these steps:</b><br><br>
+      <b>1.</b> Go to <a href="https://dashboard.stripe.com" target="_blank" style="color:var(--accent)">dashboard.stripe.com</a> → sign up free<br>
+      <b>2.</b> In the dashboard → <b>Products</b> → Add a product for each plan<br>
+      <b>3.</b> Copy each <b>Price ID</b> (starts with <code>price_</code>)<br>
+      <b>4.</b> In index.html, find <code>STRIPE_PRICES</code> and replace each <code>price_REPLACE_...</code><br>
+      <b>5.</b> Get your <b>Publishable Key</b> from Stripe → API Keys → replace <code>pk_test_REPLACE...</code><br>
+      <b>6.</b> Set your Success/Cancel URLs to your domain in Stripe settings<br><br>
+      <span style="color:#f9a825">⚡ Use <b>Test mode</b> first — card <code>4242 4242 4242 4242</code> for testing</span>
+    </div>
+    <button class="btn" style="width:100%;justify-content:center;margin-top:14px" onclick="document.getElementById('stripeSetupModal').classList.remove('open')">Got it</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     PAYMENT LOADING MODAL
+════════════════════════════════════════ -->
+<div class="modal-overlay" id="paymentLoadingModal">
+  <div class="modal-box" style="max-width:320px;text-align:center">
+    <div style="font-size:36px;margin-bottom:12px">💳</div>
+    <p style="font-size:15px;font-weight:600;margin-bottom:6px">Redirecting to Stripe…</p>
+    <p class="small" style="color:var(--muted)">You'll be taken to Stripe's secure checkout. Don't close this tab.</p>
   </div>
 </div>
 
@@ -597,8 +647,36 @@ function setPlan(p){ localStorage.setItem(PLAN_STORE,p); applyPlan(p) }
 function getUsers(){ try{return JSON.parse(localStorage.getItem(USERS_STORE)||'{}')}catch(e){return{}} }
 function setUsers(u){ localStorage.setItem(USERS_STORE,JSON.stringify(u)) }
 
-const PLAN_RANK = {free:0,silver:1,gold:2,platinum:3,diamond:4,legend:5,maxdiamond:6};
-function hasPlan(required){ return (PLAN_RANK[getPlan()]||0) >= (PLAN_RANK[required]||0) }
+/* ══════════════════════════════════════════════
+   OWNER + STRIPE CONFIG
+══════════════════════════════════════════════ */
+// 👑 OWNER — this email always gets everything free, no payment ever
+const OWNER_EMAIL = 'dhruvraje2017@gmail.com';
+
+// 💳 STRIPE — replace with your real publishable key from dashboard.stripe.com
+// Test key format: pk_test_51...   Live key: pk_live_51...
+const STRIPE_PUBLISHABLE_KEY = 'pk_test_REPLACE_WITH_YOUR_STRIPE_KEY';
+
+// Stripe Price IDs — create these in your Stripe Dashboard under Products
+// Each plan needs a recurring price. Replace these after setup.
+const STRIPE_PRICES = {
+  silver:     'price_REPLACE_silver_monthly',
+  gold:       'price_REPLACE_gold_monthly',
+  platinum:   'price_REPLACE_platinum_monthly',
+  diamond:    'price_REPLACE_diamond_monthly',
+  legend:     'price_REPLACE_legend_monthly',
+  maxdiamond: 'price_REPLACE_maxdiamond_monthly',
+};
+
+function isOwner(email){
+  return (email||'').toLowerCase().trim() === OWNER_EMAIL.toLowerCase();
+}
+
+const PLAN_RANK = {free:0,silver:1,gold:2,platinum:3,diamond:4,legend:5,maxdiamond:6,owner:99};
+function hasPlan(required){
+  if(isOwner((getAuth()||{}).email)) return true; // owner has everything
+  return (PLAN_RANK[getPlan()]||0) >= (PLAN_RANK[required]||0);
+}
 
 /* ══════════════════════════════════════════════
    PLAN APPLICATION
@@ -638,38 +716,172 @@ document.getElementById('openPlansBtn').addEventListener('click', openPlans);
 function renderPlansGrid(){
   const grid = document.getElementById('plansGrid');
   const cur = getPlan();
+  const auth = getAuth();
+  const ownerActive = isOwner(auth&&auth.email);
+
   grid.innerHTML = PLANS.map(plan=>{
-    const isCur = plan.id===cur;
+    const isCur = plan.id===cur || (ownerActive && plan.id!=='free');
     const feats = plan.features.map(f=>`<div class="plan-feature ${f.on?'on':'off'}">${f.label}</div>`).join('');
-    const ctaLabel = isCur ? '✓ Current Plan' : plan.cta;
-    const ctaStyle = isCur ? 'opacity:.5;cursor:default' : '';
+    let ctaLabel, ctaStyle='', ctaDisabled='';
+    if(ownerActive && plan.id!=='free'){
+      ctaLabel = '👑 Owner — Free';
+      ctaStyle = 'background:linear-gradient(135deg,#6a00b8,#b400ff);color:#fff;opacity:1';
+      ctaDisabled = 'disabled';
+    } else if(plan.id===cur){
+      ctaLabel = '✓ Current Plan';
+      ctaStyle = 'opacity:.5;cursor:default';
+      ctaDisabled = 'disabled';
+    } else if(plan.price!=='$0'){
+      ctaLabel = '💳 ' + plan.cta;
+    } else {
+      ctaLabel = plan.cta;
+    }
     return `<div class="plan-card ${plan.cls} ${isCur?'current':''}">
       <div class="plan-name">${plan.emoji} ${plan.name}</div>
       <div class="plan-price">${plan.price}<span>${plan.period}</span></div>
       ${feats}
-      <button class="plan-cta" style="${ctaStyle}" onclick="selectPlan('${plan.id}')" ${isCur?'disabled':''}>${ctaLabel}</button>
+      <button class="plan-cta" style="${ctaStyle}" onclick="selectPlan('${plan.id}')" ${ctaDisabled}>${ctaLabel}</button>
     </div>`;
   }).join('');
 }
 
 function selectPlan(planId){
   const plan = PLANS.find(p=>p.id===planId);
-  if(!plan)return;
+  if(!plan) return;
   const cur = getPlan();
-  if(planId===cur){ alert('You already have this plan!'); return }
-  if(plan.price==='$0'){
+  const auth = getAuth();
+
+  // 👑 OWNER — never pays, instant access
+  if(isOwner(auth&&auth.email)){
     setPlan(planId);
-    alert('✅ Switched to Free plan.');
+    renderPlansGrid();
+    showPaymentSuccess(plan, true);
+    return;
+  }
+
+  if(planId === cur){ alert('You already have this plan!'); return; }
+
+  if(plan.price === '$0'){
+    setPlan(planId);
     renderPlansGrid();
     return;
   }
-  // Simulate payment (demo)
-  const ok = confirm(`🛒 Demo purchase: ${plan.emoji} ${plan.name} — ${plan.price}${plan.period}\n\nThis is a demo — no real payment. Click OK to activate.`);
-  if(ok){
-    setPlan(planId);
-    alert(`🎉 Welcome to ${plan.emoji} ${plan.name}! Features unlocked.`);
-    renderPlansGrid();
+
+  // Launch Stripe checkout
+  launchStripeCheckout(plan);
+}
+
+/* ══════════════════════════════════════════════
+   STRIPE CHECKOUT
+══════════════════════════════════════════════ */
+let stripeLoaded = false;
+
+function loadStripe(){
+  return new Promise((resolve, reject) => {
+    if(window.Stripe){ resolve(window.Stripe); return; }
+    const s = document.createElement('script');
+    s.src = 'https://js.stripe.com/v3/';
+    s.onload = () => { stripeLoaded = true; resolve(window.Stripe); };
+    s.onerror = reject;
+    document.head.appendChild(s);
+  });
+}
+
+async function launchStripeCheckout(plan){
+  // Check if Stripe key is configured
+  if(STRIPE_PUBLISHABLE_KEY.includes('REPLACE_WITH_YOUR')){
+    showStripeSetupModal(plan);
+    return;
   }
+
+  const priceId = STRIPE_PRICES[plan.id];
+  if(!priceId || priceId.includes('REPLACE_')){
+    showStripeSetupModal(plan);
+    return;
+  }
+
+  try{
+    showPaymentModal(plan, 'loading');
+    const Stripe = await loadStripe();
+    const stripe = Stripe(STRIPE_PUBLISHABLE_KEY);
+
+    // Redirect to Stripe Checkout
+    const { error } = await stripe.redirectToCheckout({
+      lineItems: [{ price: priceId, quantity: 1 }],
+      mode: 'subscription',
+      successUrl: window.location.href + '?payment=success&plan=' + plan.id,
+      cancelUrl:  window.location.href + '?payment=cancel',
+      customerEmail: (getAuth()||{}).email || undefined,
+    });
+
+    if(error){
+      closePaymentModal();
+      alert('Stripe error: ' + error.message);
+    }
+  } catch(e){
+    closePaymentModal();
+    alert('Payment failed to load: ' + (e.message||e));
+  }
+}
+
+// Handle redirect back from Stripe
+function handleStripeReturn(){
+  const params = new URLSearchParams(window.location.search);
+  if(params.get('payment') === 'success'){
+    const planId = params.get('plan');
+    const plan = PLANS.find(p=>p.id===planId);
+    if(plan){
+      setPlan(planId);
+      // Save to user account
+      const auth = getAuth();
+      if(auth){
+        const users = getUsers();
+        if(!users[auth.email]) users[auth.email] = { email:auth.email, name:auth.name };
+        users[auth.email].plan = planId;
+        users[auth.email].stripeActivated = Date.now();
+        setUsers(users);
+      }
+      // Clean URL
+      window.history.replaceState({}, '', window.location.pathname);
+      showPaymentSuccess(plan, false);
+    }
+  } else if(params.get('payment') === 'cancel'){
+    window.history.replaceState({}, '', window.location.pathname);
+  }
+}
+
+function showPaymentSuccess(plan, isOwnerGrant){
+  const modal = document.getElementById('paymentSuccessModal');
+  const icon  = document.getElementById('psIcon');
+  const title = document.getElementById('psTitle');
+  const msg   = document.getElementById('psMsg');
+  if(!modal) return;
+  if(isOwnerGrant){
+    icon.textContent = '👑';
+    title.textContent = 'Owner Access Active';
+    msg.textContent = 'You have free access to everything forever. No payment ever required.';
+  } else {
+    icon.textContent = plan.emoji;
+    title.textContent = plan.name + ' Activated! 🎉';
+    msg.textContent = 'Payment confirmed via Stripe. Welcome to ' + plan.name + '!';
+  }
+  document.getElementById('psPlanName').textContent = plan.emoji + ' ' + plan.name;
+  modal.classList.add('open');
+}
+
+// Stripe setup instructions modal (when keys not configured)
+function showStripeSetupModal(plan){
+  document.getElementById('stripeSetupModal').classList.add('open');
+  document.getElementById('stripePlanName').textContent = plan.emoji + ' ' + plan.name + ' — ' + plan.price + plan.period;
+}
+
+function showPaymentModal(plan, state){
+  const m = document.getElementById('paymentLoadingModal');
+  if(m) m.classList.add('open');
+}
+function closePaymentModal(){
+  const m = document.getElementById('paymentLoadingModal');
+  if(m) m.classList.remove('open');
 }
 
 /* ══════════════════════════════════════════════
@@ -830,22 +1042,44 @@ function skipSignIn(){
    AFTER SIGN-IN
 ══════════════════════════════════════════════ */
 function afterSignIn(profile){
-  // Restore plan
-  const users = getUsers();
-  const user = users[profile.email];
-  if(user && user.plan) setPlan(user.plan);
-  else applyPlan(getPlan());
+  // 👑 OWNER CHECK — dhruvraje2017@gmail.com gets everything free
+  if(isOwner(profile.email)){
+    // Force maxdiamond plan for owner
+    localStorage.setItem(PLAN_STORE, 'maxdiamond');
+    applyPlan('maxdiamond');
+    // Add owner badge
+    setTimeout(()=>{
+      const hb = document.getElementById('planBadgHeader');
+      if(hb){ hb.className='plan-badge plan-maxdiamond'; hb.textContent='👑 OWNER'; }
+      // Owner banner in header
+      const existBanner = document.getElementById('ownerBanner');
+      if(!existBanner){
+        const banner = document.createElement('div');
+        banner.id = 'ownerBanner';
+        banner.style.cssText = 'background:linear-gradient(135deg,#1a0025,#0d0010);border:1px solid #b400ff55;border-radius:10px;padding:6px 12px;font-size:11px;color:#e040fb;display:flex;align-items:center;gap:6px;margin:4px 0';
+        banner.innerHTML = '👑 <b>Owner</b> — dhruvraje2017@gmail.com — All features free forever. No payment required.';
+        const container = document.querySelector('.container');
+        if(container) container.insertBefore(banner, container.firstChild);
+      }
+    }, 200);
+  } else {
+    // Restore plan from user account
+    const users = getUsers();
+    const user = users[profile.email];
+    if(user && user.plan) setPlan(user.plan);
+    else applyPlan(getPlan());
+  }
 
   // Update name field
   const ni = document.getElementById('name');
   if(ni && profile.name && profile.name !== 'Guest') ni.value = profile.name;
 
-  // Update header plan badge from stored plan
-  applyPlan(getPlan());
-
   // Dismiss gate
   const gate = document.getElementById('bbGate');
-  if(gate){ gate.style.opacity='0'; gate.style.pointerEvents='none'; setTimeout(()=>gate.remove(),400) }
+  if(gate){ gate.style.opacity='0'; gate.style.pointerEvents='none'; setTimeout(()=>gate.remove(),400); }
+
+  // Check if returning from Stripe
+  handleStripeReturn();
 
   diag.textContent = '';
 }
