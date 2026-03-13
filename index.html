@@ -1,1178 +1,1214 @@
 <!doctype html><html lang="en"><head>
 <meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>BetterBot DC — Super (Safari‑Proof)</title>
-<!-- iOS Home Screen + favicon -->
-<link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
-<link rel="apple-touch-icon" sizes="152x152" href="icon-152.png">
-<link rel="apple-touch-icon" sizes="167x167" href="icon-167.png">
-<link rel="apple-touch-icon" sizes="120x120" href="icon-120.png">
-<link rel="icon" type="image/png" sizes="32x32" href="icon-32.png">
-<link rel="icon" type="image/png" sizes="16x16" href="icon-16.png">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<title>BetterBot DC — Super</title>
+<link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png">
+<link rel="apple-touch-icon" sizes="152x152" href="icons/icon-152.png">
 <link rel="manifest" href="manifest.webmanifest">
-<meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="BetterBotDC">
 <meta name="theme-color" content="#0b1022">
-
-<!-- Try WebLLM; if it fails, we fall back to Lite mode -->
 <script defer src="https://unpkg.com/@mlc-ai/web-llm/dist/web-llm.min.js"></script>
 <style>
-:root{--bg:#0b1022;--panel:#0f172a;--text:#e5e7eb;--muted:#94a3b8;--accent:#1e3a8a;--accent2:#2563eb;--danger:#ef4444;--ok:#22c55e}
-*{box-sizing:border-box}
-html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
-.container{max-width:1060px;margin:0 auto;padding:18px}
-.header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
-.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 12px;border-radius:12px;background:var(--accent2);color:#fff;font-weight:700;border:1px solid #1b3b8f;cursor:pointer}
-.btn.ghost{background:transparent;color:#cbd5e1;border:1px solid #223047}
-.btn.secondary{background:var(--accent)}
+/* ═══ CSS VARIABLES ═══ */
+:root{
+  --bg:#080d18;--panel:#0d1628;--panel2:#111e35;--text:#e2e8f0;--muted:#64748b;
+  --accent:#1a56db;--accent2:#3b82f6;--ok:#10b981;--danger:#ef4444;--claude:#e8722a;
+  --border:#1e2d47;--radius:14px;
+  --plan-free:#64748b;
+  --plan-silver:#94a3b8;
+  --plan-gold:#f59e0b;
+  --plan-platinum:#a78bfa;
+  --plan-diamond:#38bdf8;
+  --plan-legend:#f43f5e;
+  --plan-maxdiamond:linear-gradient(135deg,#38bdf8,#a78bfa,#f43f5e);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif}
+body{padding-bottom:env(safe-area-inset-bottom)}
+.container{max-width:1060px;margin:0 auto;padding:14px}
+.header{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 13px;border-radius:12px;background:var(--accent2);color:#fff;font-weight:700;border:1px solid rgba(59,130,246,.4);cursor:pointer;font-size:13px;touch-action:manipulation;transition:opacity .15s}
+.btn:active{opacity:.75}
+.btn.ghost{background:transparent;color:#94a3b8;border:1px solid var(--border)}
+.btn.secondary{background:#1a3a7a;border-color:#1e3a8a}
 .btn.warn{background:var(--danger);border-color:#b91c1c}
-.btn.ok{background:var(--ok);border-color:#15803d}
-.input,select{padding:9px;border-radius:12px;border:1px solid #223047;background:#0b1324;color:#e5e7eb}
-.panel{background:var(--panel);border:1px solid #1f2937;border-radius:16px;padding:10px;margin:10px 0}
-.row{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0}
-.small{font-size:12px;color:var(--muted)}
-.bubble{padding:10px 12px;border-radius:14px;margin:8px 0;line-height:1.4;overflow-wrap:anywhere}
-.user{background:rgba(37,99,235,.15)}.bot{background:#0a1226}
-#log{height:360px;overflow:auto}
+.btn.ok{background:var(--ok);border-color:#059669}
+.btn.plans-btn{background:linear-gradient(135deg,#1a56db,#9333ea);border:none;padding:9px 16px;font-size:14px;box-shadow:0 0 18px rgba(99,102,241,.35)}
+.input,select{padding:9px;border-radius:12px;border:1px solid var(--border);background:#08111f;color:var(--text);font-size:13px}
+.panel{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:12px;margin:10px 0}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0;align-items:center}
+.small{font-size:11px;color:var(--muted)}
+.bubble{padding:10px 13px;border-radius:14px;margin:5px 0;line-height:1.55;overflow-wrap:anywhere;white-space:pre-wrap;font-size:14px}
+.user{background:rgba(59,130,246,.15)}.bot{background:#070e1d}
+.bot.claude-reply{background:#160a02;border-left:3px solid var(--claude)}
+#log{height:min(380px,54vh);overflow-y:auto;overflow-x:hidden;padding:4px 0}
+#log::-webkit-scrollbar{width:3px}
+#log::-webkit-scrollbar-thumb{background:#1e2d47;border-radius:4px}
 iframe{border:0;border-radius:12px}
-.tag{font-size:11px;padding:4px 8px;border-radius:999px;background:#1d4ed81f;border:1px solid #1d4ed866;color:#93c5fd}
-.kpi{display:inline-flex;gap:6px;flex-wrap:wrap;align-items:center}
-.kpi .pill{font-size:12px;padding:6px 10px;border-radius:999px;background:#1d4ed81a;border:1px solid #1d4ed84d}
-.badge{font-size:11px;padding:4px 8px;border-radius:8px;background:#1d4ed81a;border:1px solid #1d4ed84d;color:#93c5fd}
-</style></head><body>
+.tag{font-size:10px;padding:3px 8px;border-radius:999px;background:#1d4ed81f;border:1px solid #1d4ed855;color:#93c5fd}
+.pill{font-size:11px;padding:5px 10px;border-radius:999px;background:#1d4ed81a;border:1px solid #1d4ed840}
+.badge{font-size:10px;padding:3px 8px;border-radius:8px;background:#1d4ed81a;border:1px solid #1d4ed840;color:#93c5fd}
+.saved-badge{font-size:10px;padding:2px 7px;border-radius:999px;background:#059669 22;border:1px solid #05966960;color:#34d399;margin-left:4px;display:none}
+.key-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:5px 0}
+.key-label{font-size:11px;color:var(--muted);min-width:76px;flex-shrink:0}
+.provider-section{border:1px solid #1d4ed835;border-radius:12px;padding:9px 11px;margin:6px 0;background:#060f1e}
+.provider-title{font-size:11px;font-weight:700;color:#93c5fd;margin-bottom:7px;display:flex;align-items:center;gap:7px}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--muted);flex-shrink:0}
+.dot.green{background:var(--ok)}
+.dot.orange{background:#f97316}
+
+/* PLAN BADGE */
+.plan-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 11px;border-radius:999px;font-size:11px;font-weight:700;border:1px solid transparent}
+.plan-free   {color:var(--plan-free);border-color:#64748b55;background:#64748b15}
+.plan-silver {color:var(--plan-silver);border-color:#94a3b855;background:#94a3b815}
+.plan-gold   {color:var(--plan-gold);border-color:#f59e0b55;background:#f59e0b15}
+.plan-platinum{color:var(--plan-platinum);border-color:#a78bfa55;background:#a78bfa15}
+.plan-diamond{color:var(--plan-diamond);border-color:#38bdf855;background:#38bdf815}
+.plan-legend {color:var(--plan-legend);border-color:#f43f5e55;background:#f43f5e15}
+.plan-maxdiamond{color:#fff;border:none;background:linear-gradient(135deg,#38bdf8,#a78bfa,#f43f5e);box-shadow:0 0 14px rgba(56,189,248,.4)}
+
+/* MODAL OVERLAY */
+.modal-overlay{position:fixed;inset:0;background:#000b;backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;z-index:100000;padding:12px;opacity:0;pointer-events:none;transition:opacity .25s}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal-box{background:#0d1628;border:1px solid var(--border);border-radius:20px;padding:20px;width:min(700px,96vw);max-height:90vh;overflow-y:auto;transform:translateY(16px);transition:transform .25s}
+.modal-overlay.open .modal-box{transform:translateY(0)}
+.modal-close{float:right;cursor:pointer;font-size:20px;opacity:.6;line-height:1;background:none;border:none;color:var(--text);margin-left:8px}
+
+/* PLANS GRID */
+.plans-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-top:14px}
+.plan-card{border-radius:16px;padding:14px;border:1px solid var(--border);background:#060f1e;cursor:pointer;transition:transform .15s,box-shadow .15s;position:relative;overflow:hidden}
+.plan-card:hover{transform:translateY(-3px);box-shadow:0 8px 30px rgba(0,0,0,.4)}
+.plan-card.current{box-shadow:0 0 0 2px var(--accent2)}
+.plan-card .plan-name{font-weight:800;font-size:15px;margin-bottom:4px}
+.plan-card .plan-price{font-size:20px;font-weight:900;margin:6px 0}
+.plan-card .plan-price span{font-size:12px;font-weight:400;color:var(--muted)}
+.plan-card .plan-feature{font-size:11px;color:var(--muted);margin:3px 0;display:flex;align-items:center;gap:5px}
+.plan-card .plan-feature.on{color:var(--text)}
+.plan-card .plan-feature.on::before{content:'✓';color:var(--ok);font-weight:700}
+.plan-card .plan-feature.off{text-decoration:line-through;opacity:.45}
+.plan-card .plan-feature.off::before{content:'✗';color:var(--danger)}
+.plan-card .plan-cta{width:100%;margin-top:10px;padding:8px;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;border:none;transition:opacity .15s}
+.plan-card .plan-cta:active{opacity:.75}
+
+/* free card */
+.plan-card.free-card{border-color:#64748b40}
+.plan-card.free-card .plan-cta{background:#64748b;color:#fff}
+/* silver */
+.plan-card.silver-card{border-color:#94a3b840}
+.plan-card.silver-card .plan-cta{background:#94a3b8;color:#0f172a}
+/* gold */
+.plan-card.gold-card{border-color:#f59e0b60}
+.plan-card.gold-card .plan-cta{background:#f59e0b;color:#000}
+/* platinum */
+.plan-card.platinum-card{border-color:#a78bfa60}
+.plan-card.platinum-card .plan-cta{background:#a78bfa;color:#0f172a}
+/* diamond */
+.plan-card.diamond-card{border-color:#38bdf860}
+.plan-card.diamond-card .plan-cta{background:#38bdf8;color:#0f172a}
+/* legend */
+.plan-card.legend-card{border-color:#f43f5e60}
+.plan-card.legend-card .plan-cta{background:#f43f5e;color:#fff}
+/* max diamond */
+.plan-card.maxdiamond-card{border-color:transparent;background:linear-gradient(#060f1e,#060f1e) padding-box, linear-gradient(135deg,#38bdf8,#a78bfa,#f43f5e) border-box;border:2px solid transparent}
+.plan-card.maxdiamond-card .plan-cta{background:linear-gradient(135deg,#38bdf8,#a78bfa,#f43f5e);color:#fff}
+.plan-card.maxdiamond-card::before{content:'👑 BEST';position:absolute;top:8px;right:8px;font-size:9px;font-weight:900;background:linear-gradient(135deg,#38bdf8,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+
+/* SIGN-IN GATE */
+#bbGate{position:fixed;inset:0;background:#080d18f0;backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;z-index:99999;padding:12px}
+#bbCard{width:min(460px,95vw);background:#0d1628;border:1px solid var(--border);border-radius:22px;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+#bbLogo{width:80px;height:80px;border-radius:18px;background:#0b1022 url("DRAR%20CARS%20Logo%20on%20Speedway.png") center/cover no-repeat;border:2px solid var(--accent2);margin:0 auto 14px;display:block}
+#bbBar{height:6px;border-radius:999px;background:#111827;overflow:hidden;margin-bottom:6px}
+#bbFill{height:100%;width:0;background:linear-gradient(90deg,#3b82f6,#e8722a);transition:width .35s ease}
+#bbTip{font-size:11px;color:#93c5fd;text-align:center;min-height:16px;margin-bottom:14px}
+.auth-tabs{display:flex;gap:6px;margin-bottom:16px;border-bottom:1px solid var(--border);padding-bottom:10px}
+.auth-tab{flex:1;padding:9px;border-radius:10px;border:1px solid transparent;background:transparent;color:var(--muted);cursor:pointer;font-size:13px;font-weight:600;transition:all .15s}
+.auth-tab.active{background:var(--panel2);border-color:var(--border);color:var(--text)}
+.auth-panel{display:none}.auth-panel.active{display:block}
+.auth-input{width:100%;padding:10px 12px;border-radius:11px;border:1px solid var(--border);background:#08111f;color:var(--text);font-size:14px;margin-bottom:10px}
+.gsi-btn{width:100%;padding:11px;border-radius:12px;background:#fff;color:#000;font-weight:700;font-size:14px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:8px;transition:opacity .15s}
+.gsi-btn:active{opacity:.8}
+.gsi-btn img{width:20px;height:20px}
+.passkey-btn{width:100%;padding:11px;border-radius:12px;background:#1e3a8a;color:#fff;font-weight:700;font-size:14px;border:1px solid #2563eb;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:8px;transition:opacity .15s}
+.passkey-btn:active{opacity:.8}
+.auth-divider{text-align:center;color:var(--muted);font-size:11px;margin:8px 0;position:relative}
+.auth-divider::before,.auth-divider::after{content:'';position:absolute;top:50%;width:42%;height:1px;background:var(--border)}
+.auth-divider::before{left:0}.auth-divider::after{right:0}
+.auth-or{display:inline-block;background:#0d1628;padding:0 8px;position:relative;z-index:1}
+.skip-link{text-align:center;font-size:11px;color:var(--muted);margin-top:10px;cursor:pointer}
+.skip-link a{color:var(--accent2);text-decoration:none}
+
+/* loading tips bar */
+#loadingSection{text-align:center;padding:6px 0 4px}
+
+/* mobile */
+@media(max-width:600px){
+  .container{padding:10px}
+  .btn{padding:8px 10px;font-size:12px}
+  #log{height:min(340px,50vh)}
+  .plans-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+}
+</style></head>
+<body>
+
+<!-- ═══════════════ MAIN APP ═══════════════ -->
 <div class="container">
+
   <header class="header">
-    <div><strong style="font-size:18px">BetterBot DC — Super</strong>
-      <div class="small">If local model can’t load on Safari, it auto-switches to <b>Local (Lite)</b>.</div>
+    <div>
+      <strong style="font-size:17px">BetterBot DC — Super</strong>
+      <div class="small" style="margin-top:2px">Claude · OpenAI · DeepSeek · HF · Local</div>
     </div>
-    <div class="row" style="margin:0">
-      <span id="modeBadge" class="badge">Mode: detecting…</span>
-      <button id="blueBtn" class="btn secondary">Blue ON</button>
-      <button id="installBtn" class="btn ghost" style="display:none">Install app</button>
-      <button id="makePwaBtn" class="btn">Generate PWA files</button>
+    <div class="row" style="margin:0;gap:6px">
+      <span id="modeBadge" class="badge">detecting…</span>
+      <span id="planBadgHeader" class="plan-badge plan-free">Free</span>
+      <button class="btn plans-btn" id="openPlansBtn">💎 Plans</button>
+      <button id="blueBtn" class="btn secondary" style="padding:7px 10px">🎨</button>
+      <button id="installBtn" class="btn ghost" style="display:none;padding:7px 10px">📲</button>
+      <button id="makePwaBtn" class="btn ghost" style="padding:7px 10px">⬇️ PWA</button>
     </div>
   </header>
 
-  <!-- Provider + Keys (optional) -->
-  <section class="panel">
-    <div class="row">
-      <select id="provider" class="input" style="max-width:260px">
-        <option value="auto">Auto (OpenAI → DeepSeek → HF → Local/ Lite)</option>
-        <option value="openai">OpenAI only</option>
-        <option value="deepseek">DeepSeek only</option>
-        <option value="hf">Hugging Face only</option>
-        <option value="local" selected>Local (WebLLM)</option>
+  <!-- KEYS PANEL -->
+  <section class="panel" id="keysPanel">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+      <span style="font-weight:700;font-size:13px">🔑 API Keys <span class="small">(auto-saved forever)</span></span>
+      <div class="row" style="margin:0;gap:5px">
+        <button class="btn ok" id="saveKeysBtn" style="padding:7px 10px">💾 Save All</button>
+        <button class="btn ghost" id="exportKeysBtn" style="padding:7px 10px">Export</button>
+        <label class="btn ghost" for="importKeysFile" style="cursor:pointer;padding:7px 10px">Import</label>
+        <input id="importKeysFile" type="file" accept=".json" style="display:none">
+        <button class="btn warn" id="forgetKeysBtn" style="padding:7px 10px">🗑</button>
+      </div>
+    </div>
+    <div class="key-row">
+      <span class="key-label">Provider</span>
+      <select id="provider" class="input" style="flex:1;min-width:180px">
+        <option value="auto">Auto (Claude → OpenAI → DeepSeek → HF → Local)</option>
+        <option value="claude">Claude (Anthropic)</option>
+        <option value="openai">OpenAI</option>
+        <option value="deepseek">DeepSeek</option>
+        <option value="hf">Hugging Face</option>
+        <option value="local">Local (WebLLM)</option>
         <option value="lite">Local (Lite)</option>
       </select>
-      <select id="localModel" class="input" style="max-width:300px">
-        <option value="Llama-3.2-1B-Instruct-q4f16_1-MLC">Llama 3.2 1B (tiny)</option>
-        <option value="Llama-3.2-3B-Instruct-q4f16_1-MLC" selected>Llama 3.2 3B</option>
-      </select>
-      <span class="small">Tip: choose <b>Lite</b> if Safari blocks WebLLM.</span>
     </div>
-    <div class="row">
-      <input id="oaKey" class="input" placeholder="OpenAI API Key (optional)"/>
-      <input id="oaModel" class="input" value="auto" placeholder="OpenAI model"/>
-      <input id="dsKey" class="input" placeholder="DeepSeek Key (optional)"/>
-      <input id="dsModel" class="input" value="auto" placeholder="DeepSeek model"/>
-      <input id="hfKey" class="input" placeholder="Hugging Face Token (optional)"/>
-      <input id="hfModel" class="input" value="google/gemma-2-2b-it" placeholder="HF model"/>
+    <!-- Claude -->
+    <div class="provider-section">
+      <div class="provider-title"><span class="dot" id="dotClaude"></span>🤖 Claude (Anthropic)</div>
+      <div class="key-row"><span class="key-label">API Key</span><input id="claudeKey" class="input" type="password" placeholder="sk-ant-api03-…" style="flex:1"/><span class="saved-badge" id="claudeSaved">✓</span></div>
+      <div class="key-row"><span class="key-label">Model</span>
+        <select id="claudeModel" class="input" style="flex:1">
+          <option value="claude-sonnet-4-5">claude-sonnet-4-5</option>
+          <option value="claude-opus-4-5">claude-opus-4-5</option>
+          <option value="claude-haiku-4-5-20251001">claude-haiku-4-5</option>
+        </select>
+      </div>
     </div>
-    <div class="row">
-      <button class="btn" id="saveKeysBtn">Save keys</button>
-      <button class="btn ghost" id="exportKeysBtn">Export</button>
-      <label class="btn ghost" for="importKeysFile" style="cursor:pointer">Import</label>
-      <input id="importKeysFile" type="file" accept=".json" style="display:none">
-      <button class="btn warn" id="forgetKeysBtn">Forget</button>
+    <!-- OpenAI -->
+    <div class="provider-section">
+      <div class="provider-title"><span class="dot" id="dotOA"></span>OpenAI</div>
+      <div class="key-row"><span class="key-label">API Key</span><input id="oaKey" class="input" type="password" placeholder="sk-…" style="flex:1"/><span class="saved-badge" id="oaSaved">✓</span></div>
+      <div class="key-row"><span class="key-label">Model</span><input id="oaModel" class="input" value="auto" style="flex:1"/></div>
     </div>
-    <div class="kpi" id="usage"><span class="pill">Last: —</span><span class="pill">Total: —</span><span class="pill">By provider: —</span></div>
+    <!-- DeepSeek -->
+    <div class="provider-section">
+      <div class="provider-title"><span class="dot" id="dotDS"></span>DeepSeek</div>
+      <div class="key-row"><span class="key-label">API Key</span><input id="dsKey" class="input" type="password" placeholder="sk-…" style="flex:1"/><span class="saved-badge" id="dsSaved">✓</span></div>
+      <div class="key-row"><span class="key-label">Model</span><input id="dsModel" class="input" value="auto" style="flex:1"/></div>
+    </div>
+    <!-- HF -->
+    <div class="provider-section">
+      <div class="provider-title"><span class="dot" id="dotHF"></span>Hugging Face</div>
+      <div class="key-row"><span class="key-label">Token</span><input id="hfKey" class="input" type="password" placeholder="hf_…" style="flex:1"/><span class="saved-badge" id="hfSaved">✓</span></div>
+      <div class="key-row"><span class="key-label">Model</span><input id="hfModel" class="input" value="google/gemma-2-2b-it" style="flex:1"/></div>
+    </div>
+    <!-- Local -->
+    <div class="provider-section">
+      <div class="provider-title"><span class="dot green"></span>Local (WebLLM)</div>
+      <div class="key-row"><span class="key-label">Model</span>
+        <select id="localModel" class="input" style="flex:1">
+          <option value="Llama-3.2-1B-Instruct-q4f16_1-MLC">Llama 3.2 1B (tiny)</option>
+          <option value="Llama-3.2-3B-Instruct-q4f16_1-MLC" selected>Llama 3.2 3B</option>
+        </select>
+      </div>
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
+      <span class="pill" id="usageLast">Last: —</span>
+      <span class="pill" id="usageTotal">Total: —</span>
+      <span class="pill" id="usageBy">By: —</span>
+    </div>
   </section>
 
-  <!-- User + Manual Memory -->
+  <!-- USER + MEMORY -->
   <section class="panel">
     <div class="row">
-      <input id="name" class="input" value="Dhruv" style="max-width:160px"/>
-      <input id="ints" class="input" value="Roblox, Mama" style="min-width:220px"/>
-      <button class="btn ok" id="rememberBtn">Remember last</button>
-      <button class="btn ghost" id="viewMemBtn">View memory</button>
-      <button class="btn warn" id="forgetMemBtn">Forget memory</button>
+      <input id="name" class="input" value="Dhruv" style="max-width:140px" placeholder="Your name"/>
+      <input id="ints" class="input" value="Roblox, Mama" style="flex:1;min-width:160px" placeholder="Interests"/>
+      <button class="btn ok" id="rememberBtn" style="padding:7px 10px">💾 Remember</button>
+      <button class="btn ghost" id="viewMemBtn" style="padding:7px 10px">View</button>
+      <button class="btn warn" id="forgetMemBtn" style="padding:7px 10px">Forget</button>
     </div>
-    <div class="small">Manual memory: press <b>Remember last</b> after you send a message.</div>
   </section>
 
-  <!-- Music -->
-  <section class="panel">
-    <div class="small" style="margin-bottom:6px">Music station</div>
-    <div class="row">
-      <button class="btn" onclick="setStation('https://www.youtube.com/embed/videoseries?list=PLMC9KNkIncKtPzgY-5rmhvj7fax8fdxoj')">🎤 Ed YouTube</button>
-      <button class="btn" onclick="setStation('https://open.spotify.com/embed/artist/6eUKZXaKkcviH0Ku9w2n3V')">🎤 Ed Spotify</button>
-      <input id="customUrl" class="input" placeholder="Paste YouTube/Spotify EMBED URL"/>
-      <button class="btn ghost" onclick="setStation(document.getElementById('customUrl').value)">Use link</button>
+  <!-- MUSIC (plan-gated) -->
+  <section class="panel" id="musicSection">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+      <span style="font-weight:600;font-size:13px">🎵 Music Station</span>
+      <span class="plan-badge plan-silver" style="font-size:10px">Silver+</span>
     </div>
-    <div class="panel" style="padding:0"><iframe id="playerFrame" width="100%" height="180" allow="autoplay; encrypted-media; picture-in-picture" loading="lazy"></iframe></div>
+    <div id="musicLocked" style="text-align:center;padding:18px;color:var(--muted);font-size:13px">
+      🔒 Unlock Music with <b>Silver</b> plan or higher.<br>
+      <button class="btn plans-btn" style="margin-top:10px;font-size:12px" onclick="openPlans()">Upgrade Now</button>
+    </div>
+    <div id="musicContent" style="display:none">
+      <div class="row">
+        <button class="btn" onclick="setStation('https://www.youtube.com/embed/videoseries?list=PLMC9KNkIncKtPzgY-5rmhvj7fax8fdxoj')" style="padding:7px 10px">🎤 Ed YT</button>
+        <button class="btn" onclick="setStation('https://open.spotify.com/embed/artist/6eUKZXaKkcviH0Ku9w2n3V')" style="padding:7px 10px">🎤 Ed Spotify</button>
+        <input id="customUrl" class="input" placeholder="Paste embed URL" style="flex:1;min-width:140px"/>
+        <button class="btn ghost" onclick="setStation(document.getElementById('customUrl').value)" style="padding:7px 10px">Use link</button>
+      </div>
+      <div class="panel" style="padding:0;margin-top:6px"><iframe id="playerFrame" width="100%" height="150" allow="autoplay;encrypted-media;picture-in-picture" loading="lazy"></iframe></div>
+    </div>
   </section>
 
-  <!-- Sessions -->
+  <!-- SESSIONS -->
   <section class="panel">
     <div class="row">
       <span class="tag">Chats</span>
-      <select id="chatSelect" class="input" style="max-width:320px"></select>
-      <button class="btn" onclick="newChat()">New</button>
-      <button class="btn ghost" onclick="saveChat()">Save</button>
-      <button class="btn ghost" onclick="downloadChat()">Download</button>
-      <button class="btn warn" onclick="deleteChat()">Delete</button>
+      <select id="chatSelect" class="input" style="flex:1;min-width:140px"></select>
+      <button class="btn" onclick="newChat()" style="padding:7px 10px">New</button>
+      <button class="btn ghost" onclick="saveChat()" style="padding:7px 10px">Save</button>
+      <button class="btn ghost" onclick="downloadChat()" style="padding:7px 10px">⬇️</button>
+      <button class="btn warn" onclick="deleteChat()" style="padding:7px 10px">Del</button>
     </div>
-    <div class="small">Stored locally in your browser.</div>
   </section>
 
-  <!-- Chat -->
+  <!-- CHAT -->
   <section class="panel">
     <div id="log"></div>
-    <div class="row">
-      <input id="msg" class="input" placeholder="Type a message… (Enter to send)"/>
-      <button class="btn" onclick="send()">Send</button>
-      <button id="micBtn" class="btn secondary" onclick="toggleMic()">🎙️ Mic</button>
-      <button id="ttsBtn" class="btn ghost" onclick="toggleTTS()">🔊 Speak: Off</button>
-      <button class="btn ghost" onclick="testProvider()">Test</button>
-      <button class="btn warn" onclick="clearChat()">Clear</button>
+    <div class="row" style="margin-top:8px">
+      <input id="msg" class="input" placeholder="Type a message… (Enter to send)" style="flex:1;min-width:0"/>
+      <button class="btn" onclick="send()" style="padding:9px 14px">Send</button>
     </div>
-    <div id="diag" class="small"></div>
+    <div class="row" style="margin-top:4px">
+      <button id="micBtn" class="btn secondary" onclick="toggleMic()" style="padding:7px 10px">🎙️ Mic</button>
+      <button id="ttsBtn" class="btn ghost" onclick="toggleTTS()" style="padding:7px 10px">🔊 Off</button>
+      <button class="btn warn" onclick="clearChat()" style="padding:7px 10px">Clear</button>
+    </div>
+    <div id="diag" class="small" style="margin-top:5px"></div>
   </section>
 
-  <section class="panel"><div class="small"><b>PWA:</b> Click “Generate PWA files”, then serve over localhost/HTTPS to see the Install button.</div></section>
+</div><!-- /container -->
+
+<!-- ════════════════════════════════════════
+     PLANS MODAL
+════════════════════════════════════════ -->
+<div class="modal-overlay" id="plansModal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closePlans()">✕</button>
+    <h2 style="font-size:20px;margin-bottom:4px">⚡ BetterBot Plans</h2>
+    <p class="small" style="margin-bottom:0">Pick the plan that fits you. Plans unlock features in this browser/PWA instantly.</p>
+    <div class="plans-grid" id="plansGrid"></div>
+    <p class="small" style="margin-top:14px;text-align:center">Plans are demo/local only — no real payment processing. Your plan is stored in this browser.</p>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     SIGN-IN GATE
+════════════════════════════════════════ -->
+<div id="bbGate">
+  <div id="bbCard">
+    <div id="bbLogo"></div>
+    <h3 style="text-align:center;font-size:17px;margin-bottom:12px">Welcome to BetterBot DC</h3>
+    <div id="loadingSection">
+      <div id="bbBar"><div id="bbFill"></div></div>
+      <div id="bbTip">Loading…</div>
+    </div>
+    <div id="authSection" style="display:none">
+      <div class="auth-tabs">
+        <button class="auth-tab active" onclick="switchAuthTab('signin')">Sign In</button>
+        <button class="auth-tab" onclick="switchAuthTab('signup')">Create Account</button>
+        <button class="auth-tab" onclick="switchAuthTab('passkey')">🔑 Passkey</button>
+      </div>
+      <!-- Sign In -->
+      <div class="auth-panel active" id="tab-signin">
+        <button class="gsi-btn" id="googleSignInBtn">
+          <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0OCA0OCI+PHBhdGggZmlsbD0iI0ZGQzEwNyIgZD0iTTQzLjYxMSwyMC4wODNINDJWMjBIMjR2OGgxMS4zMDNjLTEuNjQ5LDQuNjU3LTYuMDgsMTEtMTEuMzAzLDExYy02LjYyNywwLTEyLTUuMzczLTEyLTEyczUuMzczLTEyLDEyLTEyYzMuMDU5LDAsNS44NDIsMS4xNTQsNy45NjEsMy4wMzlsNS42NTctNS42NTdDMzQuMDQ2LDYuMDUzLDI5LjI2OCw0LDI0LDRDMTIuOTU1LDQsNCwxMi45NTUsNCwyNHM4Ljk1NSwyMCwyMCwyMGMyMCwwLDIwLTIwLDIwLTIwQzQ0LDIyLjY5OSw0My45NDYsMjEuMzI4LDQzLjYxMSwyMC4wODN6Ii8+PHBhdGggZmlsbD0iI0ZGM0QwMCIgZD0ibTYuMzA2IDE0LjY5MSA2LjU3MSA0LjgxOUMxNC42NTUgMTUuMTA4IDE4Ljk2MSAxMiAyNCAxMmMzLjA1OSAwIDUuODQyIDEuMTU0IDcuOTYxIDMuMDM5bDUuNjU3LTUuNjU3QzM0LjA0NiA2LjA1MyAyOS4yNjggNCAyNCA0IDEzLjE0OCA0IDcuMzI0IDkuNDQ3IDYuMzA2IDE0LjY5MXoiLz48cGF0aCBmaWxsPSIjNENCODVGIiBkPSJNMjQgNDRjNS4xNjYgMCA5Ljg2LTEuOTc3IDEzLjQwOS01LjE5MmwtNi4xOS01LjIzOEEyMS4wNDYgMjEuMDQ2IDAgMCAxIDI0IDM2Yy01LjIwMiAwLTkuNjE5LTMuMzE3LTExLjI4My03Ljk0NmwtNi41MjIgNS4wMjVDOS41MDUgMzkuNTU2IDE0LjMxNyA0NCAyNCA0NHoiLz48cGF0aCBmaWxsPSIjMTk3NkQyIiBkPSJNNDMuNjExIDIwLjA4M0g0MlYyMEgyNHY4aDExLjMwM2MtLjc5MiAyLjIzNy0yLjIzMSA0LjE2Ni00LjA4NyA1LjU3MWwuMDAzLS4wMDIgNi4xOSA1LjIzOEMyMzcuNiA0MC4yMzQgNDQgMzUuMzUzIDQ0IDI0YzAtMS4zNDEtLjA1NC0yLjcxMi0uMzg5LTMuOTE3eiIvPjwvc3ZnPg==" alt="">
+          Continue with Google
+        </button>
+        <div class="auth-divider"><span class="auth-or">or</span></div>
+        <input class="auth-input" id="siEmail" type="email" placeholder="Email address"/>
+        <input class="auth-input" id="siPass" type="password" placeholder="Password"/>
+        <button class="btn" style="width:100%;justify-content:center;margin-bottom:6px" onclick="emailSignIn()">Sign In</button>
+      </div>
+      <!-- Sign Up -->
+      <div class="auth-panel" id="tab-signup">
+        <button class="gsi-btn" id="googleSignUpBtn">
+          <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0OCA0OCI+PHBhdGggZmlsbD0iI0ZGQzEwNyIgZD0iTTQzLjYxMSwyMC4wODNINDJWMjBIMjR2OGgxMS4zMDNjLTEuNjQ5LDQuNjU3LTYuMDgsMTEtMTEuMzAzLDExYy02LjYyNywwLTEyLTUuMzczLTEyLTEyczUuMzczLTEyLDEyLTEyYzMuMDU5LDAsNS44NDIsMS4xNTQsNy45NjEsMy4wMzlsNS42NTctNS42NTdDMzQuMDQ2LDYuMDUzLDI5LjI2OCw0LDI0LDRDMTIuOTU1LDQsNCwxMi45NTUsNCwyNHM4Ljk1NSwyMCwyMCwyMGMyMCwwLDIwLTIwLDIwLTIwQzQ0LDIyLjY5OSw0My45NDYsMjEuMzI4LDQzLjYxMSwyMC4wODN6Ii8+PHBhdGggZmlsbD0iI0ZGM0QwMCIgZD0ibTYuMzA2IDE0LjY5MSA2LjU3MSA0LjgxOUMxNC42NTUgMTUuMTA4IDE4Ljk2MSAxMiAyNCAxMmMzLjA1OSAwIDUuODQyIDEuMTU0IDcuOTYxIDMuMDM5bDUuNjU3LTUuNjU3QzM0LjA0NiA2LjA1MyAyOS4yNjggNCAyNCA0IDEzLjE0OCA0IDcuMzI0IDkuNDQ3IDYuMzA2IDE0LjY5MXoiLz48cGF0aCBmaWxsPSIjNENCODVGIiBkPSJNMjQgNDRjNS4xNjYgMCA5Ljg2LTEuOTc3IDEzLjQwOS01LjE5MmwtNi4xOS01LjIzOEEyMS4wNDYgMjEuMDQ2IDAgMCAxIDI0IDM2Yy01LjIwMiAwLTkuNjE5LTMuMzE3LTExLjI4My03Ljk0NmwtNi41MjIgNS4wMjVDOS41MDUgMzkuNTU2IDE0LjMxNyA0NCAyNCA0NHoiLz48cGF0aCBmaWxsPSIjMTk3NkQyIiBkPSJNNDMuNjExIDIwLjA4M0g0MlYyMEgyNHY4aDExLjMwM2MtLjc5MiAyLjIzNy0yLjIzMSA0LjE2Ni00LjA4NyA1LjU3MWwuMDAzLS4wMDIgNi4xOSA1LjIzOEMyMzcuNiA0MC4yMzQgNDQgMzUuMzUzIDQ0IDI0YzAtMS4zNDEtLjA1NC0yLjcxMi0uMzg5LTMuOTE3eiIvPjwvc3ZnPg==" alt="">
+          Sign up with Google
+        </button>
+        <div class="auth-divider"><span class="auth-or">or</span></div>
+        <input class="auth-input" id="suName" type="text" placeholder="Display name"/>
+        <input class="auth-input" id="suEmail" type="email" placeholder="Email address"/>
+        <input class="auth-input" id="suPass" type="password" placeholder="Password (min 6 chars)"/>
+        <button class="btn ok" style="width:100%;justify-content:center;margin-bottom:6px" onclick="emailSignUp()">Create Account</button>
+      </div>
+      <!-- Passkey -->
+      <div class="auth-panel" id="tab-passkey">
+        <div style="text-align:center;margin-bottom:14px">
+          <div style="font-size:36px;margin-bottom:8px">🔑</div>
+          <p style="font-size:13px;color:var(--muted)">Passkeys use your device biometrics (Face ID, fingerprint, PIN) — no password needed.</p>
+        </div>
+        <button class="passkey-btn" onclick="passkeyRegister()">🆕 Create Passkey (new user)</button>
+        <button class="passkey-btn" style="background:#0f2a4a;border-color:#1d4ed8" onclick="passkeyAuth()">🔓 Sign in with Passkey</button>
+        <div class="small" style="text-align:center;margin-top:8px">Passkeys are stored on this device. Requires Chrome/Safari 16+ on iOS/Android/Mac.</div>
+      </div>
+      <div class="skip-link"><a href="#" onclick="skipSignIn()">Continue without signing in (Free plan)</a></div>
+    </div>
+  </div>
 </div>
 
 <script>
-/* ---------- helpers/state ---------- */
-function $(s){return document.querySelector(s)}
+/* ══════════════════════════════════════════════
+   PLANS DEFINITION
+══════════════════════════════════════════════ */
+const PLANS = [
+  {
+    id:'free', name:'Free', cls:'free-card', badge:'plan-free', emoji:'🌱',
+    price:'$0', period:'forever',
+    features:[
+      {label:'Basic AI Chat (Lite only)',on:true},
+      {label:'Manual memory',on:true},
+      {label:'/help commands',on:true},
+      {label:'Music Station',on:false},
+      {label:'Cloud AI (Claude/OpenAI)',on:false},
+      {label:'Voice (Mic + TTS)',on:false},
+      {label:'ZAP Max mode',on:false},
+      {label:'Photo attachments',on:false},
+      {label:'Chat history export',on:false},
+      {label:'Priority support',on:false},
+    ],
+    cta:'Current',ctaClass:'',
+  },
+  {
+    id:'silver', name:'Silver', cls:'silver-card', badge:'plan-silver', emoji:'🥈',
+    price:'$2', period:'/mo',
+    features:[
+      {label:'Everything in Free',on:true},
+      {label:'Music Station 🎵',on:true},
+      {label:'Cloud AI (all providers)',on:true},
+      {label:'Voice Mic + TTS',on:true},
+      {label:'Chat history export',on:true},
+      {label:'ZAP Max mode',on:false},
+      {label:'Photo attachments',on:false},
+      {label:'Priority support',on:false},
+    ],
+    cta:'Get Silver',
+  },
+  {
+    id:'gold', name:'Gold', cls:'gold-card', badge:'plan-gold', emoji:'🥇',
+    price:'$5', period:'/mo',
+    features:[
+      {label:'Everything in Silver',on:true},
+      {label:'Photo attachments 📸',on:true},
+      {label:'Extended memory (1000)',on:true},
+      {label:'ZAP Max mode',on:false},
+      {label:'Priority support',on:false},
+    ],
+    cta:'Get Gold',
+  },
+  {
+    id:'platinum', name:'Platinum', cls:'platinum-card', badge:'plan-platinum', emoji:'💜',
+    price:'$10', period:'/mo',
+    features:[
+      {label:'Everything in Gold',on:true},
+      {label:'ZAP Max turbo mode ⚡',on:true},
+      {label:'Priority AI queue',on:true},
+      {label:'Custom bot persona',on:true},
+      {label:'Priority support',on:false},
+    ],
+    cta:'Get Platinum',
+  },
+  {
+    id:'diamond', name:'Diamond', cls:'diamond-card', badge:'plan-diamond', emoji:'💎',
+    price:'$19', period:'/mo',
+    features:[
+      {label:'Everything in Platinum',on:true},
+      {label:'Priority support 24/7',on:true},
+      {label:'Multi-session sync',on:true},
+      {label:'Early feature access',on:true},
+      {label:'Remove all rate limits',on:true},
+    ],
+    cta:'Get Diamond',
+  },
+  {
+    id:'legend', name:'Legend', cls:'legend-card', badge:'plan-legend', emoji:'🔥',
+    price:'$39', period:'/mo',
+    features:[
+      {label:'Everything in Diamond',on:true},
+      {label:'Legend badge 🔥',on:true},
+      {label:'Custom AI fine-tuning',on:true},
+      {label:'API passthrough access',on:true},
+      {label:'Dedicated model slot',on:true},
+    ],
+    cta:'Go Legend',
+  },
+  {
+    id:'maxdiamond', name:'MAX Diamond', cls:'maxdiamond-card', badge:'plan-maxdiamond', emoji:'👑',
+    price:'$99', period:'/mo',
+    features:[
+      {label:'EVERYTHING unlocked',on:true},
+      {label:'MAX Diamond badge 👑',on:true},
+      {label:'Lifetime feature guarantee',on:true},
+      {label:'White-glove onboarding',on:true},
+      {label:'Direct dev line',on:true},
+      {label:'Unlimited everything',on:true},
+    ],
+    cta:'Go MAX 👑',
+  }
+];
+
+/* ══════════════════════════════════════════════
+   STATE / HELPERS
+══════════════════════════════════════════════ */
+const KEY_STORE   = 'bb_keys_v3';
+const AUTH_STORE  = '__bb_auth__';
+const PLAN_STORE  = '__bb_plan__';
+const USERS_STORE = '__bb_users__';
+
+const $  = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+
+function getKeys(){ try{return JSON.parse(localStorage.getItem(KEY_STORE)||'{}')}catch(e){return{}} }
+function setKeys(o){ localStorage.setItem(KEY_STORE, JSON.stringify(o)) }
+function getAuth(){ try{return JSON.parse(localStorage.getItem(AUTH_STORE)||'null')}catch(e){return null} }
+function setAuth(o){ localStorage.setItem(AUTH_STORE, JSON.stringify(o)) }
+function getPlan(){ return localStorage.getItem(PLAN_STORE)||'free' }
+function setPlan(p){ localStorage.setItem(PLAN_STORE,p); applyPlan(p) }
+function getUsers(){ try{return JSON.parse(localStorage.getItem(USERS_STORE)||'{}')}catch(e){return{}} }
+function setUsers(u){ localStorage.setItem(USERS_STORE,JSON.stringify(u)) }
+
+const PLAN_RANK = {free:0,silver:1,gold:2,platinum:3,diamond:4,legend:5,maxdiamond:6};
+function hasPlan(required){ return (PLAN_RANK[getPlan()]||0) >= (PLAN_RANK[required]||0) }
+
+/* ══════════════════════════════════════════════
+   PLAN APPLICATION
+══════════════════════════════════════════════ */
+function applyPlan(planId){
+  const plan = PLANS.find(p=>p.id===planId)||PLANS[0];
+  // Update header badge
+  const hb = document.getElementById('planBadgHeader');
+  if(hb){ hb.className='plan-badge '+plan.badge; hb.textContent=plan.emoji+' '+plan.name }
+  // Music section
+  const musicOk = hasPlan('silver');
+  const ml = document.getElementById('musicLocked');
+  const mc = document.getElementById('musicContent');
+  if(ml) ml.style.display = musicOk ? 'none' : '';
+  if(mc) mc.style.display = musicOk ? 'block' : 'none';
+  // Provider access — free only gets lite
+  if(!hasPlan('silver')){
+    const prov = document.getElementById('provider');
+    if(prov && !['local','lite'].includes(prov.value)){
+      prov.value = 'lite';
+    }
+  }
+  // Re-render plans grid if open
+  if(document.getElementById('plansGrid').children.length){
+    renderPlansGrid();
+  }
+}
+
+/* ══════════════════════════════════════════════
+   PLANS MODAL
+══════════════════════════════════════════════ */
+function openPlans(){ document.getElementById('plansModal').classList.add('open'); renderPlansGrid() }
+function closePlans(){ document.getElementById('plansModal').classList.remove('open') }
+document.getElementById('plansModal').addEventListener('click', e=>{ if(e.target===e.currentTarget)closePlans() });
+document.getElementById('openPlansBtn').addEventListener('click', openPlans);
+
+function renderPlansGrid(){
+  const grid = document.getElementById('plansGrid');
+  const cur = getPlan();
+  grid.innerHTML = PLANS.map(plan=>{
+    const isCur = plan.id===cur;
+    const feats = plan.features.map(f=>`<div class="plan-feature ${f.on?'on':'off'}">${f.label}</div>`).join('');
+    const ctaLabel = isCur ? '✓ Current Plan' : plan.cta;
+    const ctaStyle = isCur ? 'opacity:.5;cursor:default' : '';
+    return `<div class="plan-card ${plan.cls} ${isCur?'current':''}">
+      <div class="plan-name">${plan.emoji} ${plan.name}</div>
+      <div class="plan-price">${plan.price}<span>${plan.period}</span></div>
+      ${feats}
+      <button class="plan-cta" style="${ctaStyle}" onclick="selectPlan('${plan.id}')" ${isCur?'disabled':''}>${ctaLabel}</button>
+    </div>`;
+  }).join('');
+}
+
+function selectPlan(planId){
+  const plan = PLANS.find(p=>p.id===planId);
+  if(!plan)return;
+  const cur = getPlan();
+  if(planId===cur){ alert('You already have this plan!'); return }
+  if(plan.price==='$0'){
+    setPlan(planId);
+    alert('✅ Switched to Free plan.');
+    renderPlansGrid();
+    return;
+  }
+  // Simulate payment (demo)
+  const ok = confirm(`🛒 Demo purchase: ${plan.emoji} ${plan.name} — ${plan.price}${plan.period}\n\nThis is a demo — no real payment. Click OK to activate.`);
+  if(ok){
+    setPlan(planId);
+    alert(`🎉 Welcome to ${plan.emoji} ${plan.name}! Features unlocked.`);
+    renderPlansGrid();
+  }
+}
+
+/* ══════════════════════════════════════════════
+   AUTH TABS
+══════════════════════════════════════════════ */
+function switchAuthTab(tab){
+  $$('.auth-tab').forEach((t,i)=>{ t.classList.toggle('active', ['signin','signup','passkey'][i]===tab) });
+  $$('.auth-panel').forEach(p=>p.classList.remove('active'));
+  const el = document.getElementById('tab-'+tab);
+  if(el) el.classList.add('active');
+}
+
+/* ══════════════════════════════════════════════
+   EMAIL AUTH (local demo)
+══════════════════════════════════════════════ */
+function emailSignUp(){
+  const name  = $('#suName').value.trim();
+  const email = $('#suEmail').value.trim().toLowerCase();
+  const pass  = $('#suPass').value;
+  if(!email||!pass){ alert('Email and password required.'); return }
+  if(pass.length<6){ alert('Password must be at least 6 characters.'); return }
+  const users = getUsers();
+  if(users[email]){ alert('Account already exists. Sign in instead.'); return }
+  // Store hashed-ish (demo only — NOT secure for production!)
+  users[email] = { name: name||email.split('@')[0], email, passHash: btoa(pass), plan:'free', created: Date.now() };
+  setUsers(users);
+  const profile = { email, name: users[email].name, method:'email' };
+  setAuth(profile);
+  afterSignIn(profile);
+}
+
+function emailSignIn(){
+  const email = $('#siEmail').value.trim().toLowerCase();
+  const pass  = $('#siPass').value;
+  if(!email||!pass){ alert('Email and password required.'); return }
+  const users = getUsers();
+  const user  = users[email];
+  if(!user){ alert('No account found. Create one first.'); return }
+  if(btoa(pass) !== user.passHash){ alert('Incorrect password.'); return }
+  // restore plan from account
+  if(user.plan) setPlan(user.plan);
+  const profile = { email, name: user.name, method:'email' };
+  setAuth(profile);
+  afterSignIn(profile);
+}
+
+/* ══════════════════════════════════════════════
+   GOOGLE SIGN-IN (GIS — needs real Client ID)
+══════════════════════════════════════════════ */
+const GOOGLE_CLIENT_ID = 'REPLACE_ME.apps.googleusercontent.com'; // Replace with real Client ID
+
+function initGoogleSignIn(){
+  if(GOOGLE_CLIENT_ID.startsWith('REPLACE_ME')){
+    // Demo fallback
+    ['googleSignInBtn','googleSignUpBtn'].forEach(id=>{
+      const btn = document.getElementById(id);
+      if(!btn) return;
+      btn.onclick = ()=>{
+        const email = prompt('DEMO Google Sign-In — enter your email:');
+        if(!email) return;
+        const profile = { email: email.toLowerCase(), name: email.split('@')[0], method:'google' };
+        setAuth(profile);
+        afterSignIn(profile);
+      };
+    });
+    return;
+  }
+  const s = document.createElement('script');
+  s.src = 'https://accounts.google.com/gsi/client';
+  s.async = true; s.defer = true;
+  s.onload = ()=>{
+    window.google.accounts.id.initialize({
+      client_id: GOOGLE_CLIENT_ID,
+      callback: (resp)=>{
+        try{
+          const b64 = resp.credential.split('.')[1];
+          const data = JSON.parse(decodeURIComponent(escape(atob(b64.replace(/-/g,'+').replace(/_/g,'/')))));
+          const profile = { email: data.email, name: data.name||data.given_name||'User', picture: data.picture, method:'google' };
+          setAuth(profile); afterSignIn(profile);
+        } catch(e){ alert('Google sign-in failed.') }
+      }
+    });
+    window.google.accounts.id.renderButton(document.getElementById('googleSignInBtn'), {theme:'outline',size:'large',shape:'pill',text:'continue_with',width:240});
+    document.getElementById('googleSignUpBtn').onclick = ()=> window.google.accounts.id.prompt();
+  };
+  document.head.appendChild(s);
+}
+
+/* ══════════════════════════════════════════════
+   PASSKEY AUTH (WebAuthn)
+══════════════════════════════════════════════ */
+async function passkeyRegister(){
+  if(!window.PublicKeyCredential){ alert('Passkeys not supported on this browser/device.'); return }
+  try{
+    const email = prompt('Enter your email for this passkey:');
+    if(!email) return;
+    const enc = new TextEncoder();
+    const challenge = crypto.getRandomValues(new Uint8Array(32));
+    const userId = enc.encode(email.toLowerCase());
+    const cred = await navigator.credentials.create({
+      publicKey:{
+        challenge,
+        rp:{ name:'BetterBot DC', id: location.hostname||'localhost' },
+        user:{ id: userId, name: email, displayName: email.split('@')[0] },
+        pubKeyCredParams:[{alg:-7,type:'public-key'},{alg:-257,type:'public-key'}],
+        authenticatorSelection:{ residentKey:'required', userVerification:'preferred' },
+        timeout: 60000,
+        attestation:'none'
+      }
+    });
+    // Store credential ID for this email (demo)
+    const stored = JSON.parse(localStorage.getItem('__bb_passkeys__')||'{}');
+    stored[email.toLowerCase()] = btoa(String.fromCharCode(...new Uint8Array(cred.rawId)));
+    localStorage.setItem('__bb_passkeys__', JSON.stringify(stored));
+    const profile = { email: email.toLowerCase(), name: email.split('@')[0], method:'passkey' };
+    setAuth(profile); afterSignIn(profile);
+    alert('✅ Passkey created! You can sign in with it next time.');
+  } catch(e){
+    alert('Passkey creation failed: '+(e.message||e)+'\n\nMake sure you\'re on HTTPS or localhost.');
+  }
+}
+
+async function passkeyAuth(){
+  if(!window.PublicKeyCredential){ alert('Passkeys not supported on this browser/device.'); return }
+  try{
+    const challenge = crypto.getRandomValues(new Uint8Array(32));
+    const cred = await navigator.credentials.get({
+      publicKey:{
+        challenge,
+        userVerification:'preferred',
+        timeout:60000
+      }
+    });
+    // For demo: look up stored passkeys
+    const stored = JSON.parse(localStorage.getItem('__bb_passkeys__')||'{}');
+    const credId = btoa(String.fromCharCode(...new Uint8Array(cred.rawId)));
+    const matchEmail = Object.keys(stored).find(e=>stored[e]===credId);
+    if(matchEmail){
+      const profile = { email: matchEmail, name: matchEmail.split('@')[0], method:'passkey' };
+      setAuth(profile); afterSignIn(profile);
+    } else {
+      // Passkey verified by device — accept it
+      const profile = { email:'passkey-user@device', name:'Passkey User', method:'passkey' };
+      setAuth(profile); afterSignIn(profile);
+    }
+  } catch(e){
+    if(e.name==='NotAllowedError') return; // user cancelled
+    alert('Passkey sign-in failed: '+(e.message||e));
+  }
+}
+
+function skipSignIn(){
+  const profile = { email:'guest', name:'Guest', method:'guest' };
+  setAuth(profile); afterSignIn(profile);
+}
+
+/* ══════════════════════════════════════════════
+   AFTER SIGN-IN
+══════════════════════════════════════════════ */
+function afterSignIn(profile){
+  // Restore plan
+  const users = getUsers();
+  const user = users[profile.email];
+  if(user && user.plan) setPlan(user.plan);
+  else applyPlan(getPlan());
+
+  // Update name field
+  const ni = document.getElementById('name');
+  if(ni && profile.name && profile.name !== 'Guest') ni.value = profile.name;
+
+  // Update header plan badge from stored plan
+  applyPlan(getPlan());
+
+  // Dismiss gate
+  const gate = document.getElementById('bbGate');
+  if(gate){ gate.style.opacity='0'; gate.style.pointerEvents='none'; setTimeout(()=>gate.remove(),400) }
+
+  diag.textContent = '';
+}
+
+/* ══════════════════════════════════════════════
+   SIGN-IN GATE LOADING ANIMATION
+══════════════════════════════════════════════ */
+(function(){
+  const tips = [
+    '💎 Now with Claude (Anthropic) AI!',
+    '🔑 Keys saved once — reload any time.',
+    '🎵 Music unlocks at Silver plan.',
+    '🤖 Auto mode: Claude → OpenAI → HF → Local.',
+    '📲 Install as a PWA for offline use.',
+    '👑 MAX Diamond — every feature unlocked.',
+  ];
+  let i=0, p=0;
+  const fill = document.getElementById('bbFill');
+  const tip  = document.getElementById('bbTip');
+  const prog = setInterval(()=>{
+    p = Math.min(88, p + Math.random()*11);
+    fill.style.width = p+'%';
+    tip.textContent = tips[i++%tips.length];
+  }, 900);
+
+  const existing = getAuth();
+  if(existing){
+    // Already logged in — skip gate quickly
+    clearInterval(prog);
+    fill.style.width = '100%';
+    setTimeout(()=> afterSignIn(existing), 300);
+  } else {
+    // Show auth UI after loading anim
+    setTimeout(()=>{
+      clearInterval(prog);
+      fill.style.width='95%';
+      document.getElementById('loadingSection').style.display='none';
+      document.getElementById('authSection').style.display='';
+      initGoogleSignIn();
+    }, 2000);
+  }
+})();
+
+/* ══════════════════════════════════════════════
+   CORE CHAT ENGINE
+══════════════════════════════════════════════ */
 var logEl=$('#log'), diag=$('#diag'), modeBadge=$('#modeBadge');
-var OPENAI_CANDIDATES=['gpt-4o-mini','gpt-4.1-mini','gpt-4o','gpt-4.1'];
-var DEEPSEEK_CANDIDATES=['deepseek-v3','deepseek-reasoner','deepseek-chat'];
+var OPENAI_CANDIDATES=['gpt-4o-mini','gpt-4.1-mini','gpt-4o'];
+var DEEPSEEK_CANDIDATES=['deepseek-v3','deepseek-chat'];
+var CLAUDE_CANDIDATES=['claude-sonnet-4-5','claude-opus-4-5','claude-haiku-4-5-20251001'];
 var speakReplies=false, currentSessionId=null;
 var chat=[{role:'bot',text:"Hi! I'm BetterBot DC. Type /help to see commands."}];
-function render(){var html=''; for(var i=0;i<chat.length;i++){var m=chat[i]; html+='<div class="bubble '+(m.role==='user'?'user':'bot')+'"><div class="small">'+(m.role==='user'?(getUserName()||'Me'):'BetterBot DC')+'</div><div>'+String(m.text||'').replace(/</g,'&lt;')+'</div></div>'} logEl.innerHTML=html; logEl.scrollTop=logEl.scrollHeight}
-render(); function clearChat(){chat=[{role:'bot',text:'Chat cleared. What next?'}];render()}
 
-/* ---------- keys ---------- */
-var KEY_STORE='bb_keys_v2';
-function getKeys(){try{return JSON.parse(localStorage.getItem(KEY_STORE)||'{}')}catch(e){return{}}}
-function setKeys(o){localStorage.setItem(KEY_STORE,JSON.stringify(o))}
-function loadKeysToUI(){var k=getKeys(); if(k.provider)$('#provider').value=k.provider;
-  if(k.oa)$('#oaKey').value=k.oa; if(k.oaModel)$('#oaModel').value=k.oaModel||'auto';
-  if(k.ds)$('#dsKey').value=k.ds; if(k.dsModel)$('#dsModel').value=k.dsModel||'auto';
-  if(k.hf)$('#hfKey').value=k.hf; if(k.hfModel)$('#hfModel').value=k.hfModel||'google/gemma-2-2b-it';
-  if(k.localModel)$('#localModel').value=k.localModel;}
-function readKeys(){return{provider:$('#provider').value,oa:$('#oaKey').value.trim(),oaModel:$('#oaModel').value.trim(),ds:$('#dsKey').value.trim(),dsModel:$('#dsModel').value.trim(),hf:$('#hfKey').value.trim(),hfModel:$('#hfModel').value.trim(),localModel:$('#localModel').value}}
-$('#saveKeysBtn').addEventListener('click',function(){setKeys(readKeys());alert('Saved on this device.')})
-$('#forgetKeysBtn').addEventListener('click',function(){localStorage.removeItem(KEY_STORE);['oaKey','dsKey','hfKey'].forEach(function(id){var el=document.getElementById(id);if(el)el.value=''});alert('Keys cleared.')})
-$('#exportKeysBtn').addEventListener('click',function(){var blob=new Blob([JSON.stringify(readKeys(),null,2)],{type:'application/json'});var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='betterbot-keys.json';a.click();setTimeout(function(){URL.revokeObjectURL(a.href)},1000)})
-$('#importKeysFile').addEventListener('change',function(e){var f=e.target.files&&e.target.files[0];if(!f)return;var r=new FileReader();r.onload=function(){try{setKeys(JSON.parse(r.result));loadKeysToUI();alert('Keys imported.')}catch(e){alert('Invalid JSON.')}};r.readAsText(f)})
+function render(){
+  var html='';
+  for(var i=0;i<chat.length;i++){
+    var m=chat[i];
+    var cls='bubble '+(m.role==='user'?'user':'bot'+(m.provider==='Claude'?' claude-reply':''));
+    html+='<div class="'+cls+'">'
+      +'<div class="small" style="margin-bottom:3px">'
+        +(m.role==='user'?(getUserName()||'Me'):'🤖 BetterBot'+(m.provider?' <span style="font-size:10px;opacity:.65">['+m.provider+']</span>':''))
+      +'</div>'
+      +String(m.text||'').replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    +'</div>';
+  }
+  logEl.innerHTML=html; logEl.scrollTop=logEl.scrollHeight;
+}
+render();
+function clearChat(){ chat=[{role:'bot',text:'Chat cleared.'}]; render() }
+
+/* Keys persistence */
+function loadKeysToUI(){
+  var k=getKeys();
+  if(k.provider) $('#provider').value=k.provider;
+  if(k.claude){$('#claudeKey').value=k.claude; showSaved('claudeSaved','dotClaude')}
+  if(k.claudeModel) $('#claudeModel').value=k.claudeModel;
+  if(k.oa){$('#oaKey').value=k.oa; showSaved('oaSaved','dotOA')}
+  if(k.oaModel) $('#oaModel').value=k.oaModel||'auto';
+  if(k.ds){$('#dsKey').value=k.ds; showSaved('dsSaved','dotDS')}
+  if(k.dsModel) $('#dsModel').value=k.dsModel||'auto';
+  if(k.hf){$('#hfKey').value=k.hf; showSaved('hfSaved','dotHF')}
+  if(k.hfModel) $('#hfModel').value=k.hfModel||'google/gemma-2-2b-it';
+  if(k.localModel) $('#localModel').value=k.localModel;
+}
+function showSaved(bid,did){
+  var b=document.getElementById(bid); if(b)b.style.display='inline';
+  var d=document.getElementById(did); if(d){d.style.background='var(--ok)'}
+}
+function readKeysFromUI(){
+  return{
+    provider:$('#provider').value,
+    claude:$('#claudeKey').value.trim(), claudeModel:$('#claudeModel').value,
+    oa:$('#oaKey').value.trim(), oaModel:$('#oaModel').value.trim(),
+    ds:$('#dsKey').value.trim(), dsModel:$('#dsModel').value.trim(),
+    hf:$('#hfKey').value.trim(), hfModel:$('#hfModel').value.trim(),
+    localModel:$('#localModel').value
+  }
+}
+$('#saveKeysBtn').addEventListener('click',()=>{
+  var k=readKeysFromUI(); setKeys(k);
+  if(k.claude)showSaved('claudeSaved','dotClaude');
+  if(k.oa)showSaved('oaSaved','dotOA');
+  if(k.ds)showSaved('dsSaved','dotDS');
+  if(k.hf)showSaved('hfSaved','dotHF');
+  diag.textContent='✅ All keys saved permanently.';
+  setTimeout(()=>diag.textContent='',3500);
+});
+$('#forgetKeysBtn').addEventListener('click',()=>{
+  if(!confirm('Delete all saved keys?'))return;
+  localStorage.removeItem(KEY_STORE);
+  ['claudeKey','oaKey','dsKey','hfKey'].forEach(id=>{var e=document.getElementById(id);if(e)e.value=''});
+  alert('Keys cleared.');
+});
+$('#exportKeysBtn').addEventListener('click',()=>{
+  var blob=new Blob([JSON.stringify(readKeysFromUI(),null,2)],{type:'application/json'});
+  var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='betterbot-keys.json'; a.click();
+});
+$('#importKeysFile').addEventListener('change',e=>{
+  var f=e.target.files&&e.target.files[0]; if(!f)return;
+  var r=new FileReader(); r.onload=()=>{try{setKeys(JSON.parse(r.result));loadKeysToUI();alert('Keys imported.')}catch(e){alert('Invalid JSON')}};
+  r.readAsText(f);
+});
 loadKeysToUI();
 
-/* ---------- manual memory ---------- */
+/* Memory */
 function getUserName(){return $('#name').value||'Dhruv'}
 function memKey(){return 'bb_memory_'+getUserName()}
 function getMem(){try{return JSON.parse(localStorage.getItem(memKey())||'[]')}catch(e){return[]}}
 function setMem(a){localStorage.setItem(memKey(),JSON.stringify(a))}
-function rememberLatest(){var last=null; for(var i=chat.length-1;i>=0;i--){if(chat[i].role==='user'){last=chat[i].text;break}} if(!last){alert('No recent user message.');return} var mem=getMem(); mem.unshift(last); setMem(mem.slice(0,500)); alert('Saved to memory for '+getUserName());}
-function viewMem(){var m=getMem(); alert(m.length?('Memory for '+getUserName()+':\n\n- '+m.join('\n- ')):'No memory yet.')}
-function forgetMem(){if(confirm('Forget ALL memory for '+getUserName()+'?')){setMem([]);alert('Memory cleared.')}}
-$('#rememberBtn').addEventListener('click',rememberLatest);$('#viewMemBtn').addEventListener('click',viewMem);$('#forgetMemBtn').addEventListener('click',forgetMem);
+function rememberLatest(){
+  var last=null; for(var i=chat.length-1;i>=0;i--){if(chat[i].role==='user'){last=chat[i].text;break}}
+  if(!last){alert('No user message to remember.');return}
+  var mem=getMem(); mem.unshift(last); setMem(mem.slice(0,hasPlan('gold')?1000:500));
+  alert('Saved to memory!');
+}
+$('#rememberBtn').addEventListener('click',rememberLatest);
+$('#viewMemBtn').addEventListener('click',()=>{var m=getMem();alert(m.length?('Memory:\n- '+m.join('\n- ')):'No memory yet.')});
+$('#forgetMemBtn').addEventListener('click',()=>{if(confirm('Forget ALL memory?')){setMem([]);alert('Memory cleared.')}});
 
-/* ---------- system prompt ---------- */
-function buildSystem(){var mem=getMem();var name=getUserName();var ints=($('#ints').value||'').split(',').map(function(s){return s.trim()}).filter(Boolean).join(', ');var memBlock=mem.length?('\nKnown memories (keep consistent):\n- '+mem.slice(0,50).join('\n- ')):'';return 'You are DRAR CARS BetterBot DC. Be friendly and concise.\nUser name: '+name+'\nInterests: '+(ints||'none')+memBlock}
+function buildSystem(){
+  var mem=getMem(), name=getUserName();
+  var ints=($('#ints').value||'').split(',').map(s=>s.trim()).filter(Boolean).join(', ');
+  var memBlock=mem.length?('\nMemory:\n- '+mem.slice(0,50).join('\n- ')):'';
+  return 'You are DRAR CARS BetterBot DC — friendly, concise AI.\nUser: '+name+'\nInterests: '+(ints||'none')+memBlock;
+}
 
-/* ---------- usage pills ---------- */
-var usageState={last:null,total:0,by:{}}; function addUsage(provider,usage){if(!usage||usage.total_tokens==null){usageState.last=provider+': n/a'}else{usageState.last=provider+': '+usage.total_tokens;usageState.total+=usage.total_tokens;usageState.by[provider]=(usageState.by[provider]||0)+usage.total_tokens}
-var pills=$('#usage').querySelectorAll('.pill'); if(pills[0])pills[0].textContent='Last: '+(usageState.last||'—'); if(pills[1])pills[1].textContent='Total: '+(usageState.total||0);
-if(pills[2]){var s=[];for(var k in usageState.by){s.push(k+' '+usageState.by[k])} pills[2].textContent='By provider: '+(s.length?s.join(', '):'—')}}
+/* Usage */
+var usageState={last:null,total:0,by:{}};
+function addUsage(prov,tokens){
+  usageState.last=prov+(tokens?': '+tokens:': n/a');
+  if(tokens){usageState.total+=tokens; usageState.by[prov]=(usageState.by[prov]||0)+tokens}
+  $('#usageLast').textContent='Last: '+(usageState.last||'—');
+  $('#usageTotal').textContent='Total: '+usageState.total;
+  var s=[];for(var k in usageState.by){s.push(k+' '+usageState.by[k])};
+  $('#usageBy').textContent='By: '+(s.join(', ')||'—');
+}
 
-/* ---------- history ---------- */
-function historyForAPI(){var h=[], start=Math.max(0,chat.length-6); for(var i=start;i<chat.length;i++){var m=chat[i];h.push({role:m.role==='user'?'user':'assistant',content:m.text})} return h}
+function historyForAPI(){
+  var h=[],start=Math.max(0,chat.length-8);
+  for(var i=start;i<chat.length;i++){var m=chat[i]; h.push({role:m.role==='user'?'user':'assistant',content:m.text})}
+  return h;
+}
 
-/* ---------- cloud providers ---------- */
-function safeDiag(label,msg){diag.textContent=label+': '+(msg||'error')}
-async function callOpenAI(p){var key=($('#oaKey').value||'').trim(); if(!key)throw new Error('skip'); var mf=($('#oaModel').value||'auto').trim().toLowerCase(); var list=(mf&&mf!=='auto')?[mf]:OPENAI_CANDIDATES; var lastErr=null;
-for(var i=0;i<list.length;i++){var model=list[i]; var res=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},body:JSON.stringify({model:model,messages:[{role:'system',content:p.system}].concat(p.history).concat([{role:'user',content:p.userText}]),temperature:0.7,max_tokens:300})});
-if(res.ok){var data=await res.json(); addUsage('OpenAI',data.usage); var c=(data.choices&&data.choices[0]&&data.choices[0].message&&data.choices[0].message.content)||''; return (c||'(no reply)').trim()} else {lastErr=await res.text().catch(function(){return 'HTTP '+res.status})}}
-safeDiag('OpenAI',lastErr||'model error'); throw new Error('OpenAI: '+(lastErr||'model error'))}
-async function callDeepSeek(p){var key=($('#dsKey').value||'').trim(); if(!key)throw new Error('skip'); var mf=($('#dsModel').value||'auto').trim().toLowerCase(); var list=(mf&&mf!=='auto')?[mf]:DEEPSEEK_CANDIDATES; var lastErr=null;
-for(var i=0;i<list.length;i++){var model=list[i]; var res=await fetch('https://api.deepseek.com/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},body:JSON.stringify({model:model,messages:[{role:'system',content:p.system}].concat(p.history).concat([{role:'user',content:p.userText}]),temperature:0.7,max_tokens:300})});
-if(res.ok){var data=await res.json(); addUsage('DeepSeek',data.usage); var c=(data.choices&&data.choices[0]&&data.choices[0].message&&data.choices[0].message.content)||''; return (c||'(no reply)').trim()} else {lastErr=await res.text().catch(function(){return 'HTTP '+res.status})}}
-safeDiag('DeepSeek',lastErr||'model error'); throw new Error('DeepSeek: '+(lastErr||'model error'))}
-async function callHF(p){var key=($('#hfKey').value||'').trim(); if(!key)throw new Error('skip'); var model=($('#hfModel').value||'google/gemma-2-2b-it').trim();
-var hist='';var h=p.history; for(var i=0;i<h.length;i++){hist+=(h[i].role==='user'?'User: ':'Assistant: ')+h[i].content+'\n'}
-var prompt=p.system+'\n\n'+hist+'User: '+p.userText+'\nAssistant:'; var lastErr=null;
-try{var res=await fetch('https://api-inference.huggingface.co/models/'+encodeURIComponent(model),{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},body:JSON.stringify({inputs:prompt,parameters:{max_new_tokens:300,temperature:0.7,return_full_text:false}})});
-if(!res.ok){lastErr=await res.text().catch(function(){return 'HTTP '+res.status}); throw new Error(lastErr||'HF error')}
-var data=await res.json(); addUsage('HF',null); var txt=''; if(Array.isArray(data)&&data[0]&&data[0].generated_text)txt=data[0].generated_text; else if(data&&data.generated_text)txt=data.generated_text; return (txt||'(no reply)').trim()}
-catch(e){safeDiag('HF',e&&e.message||e); throw new Error('HF: '+(e&&e.message||e))}}
+/* ── CLAUDE ── */
+async function callClaude(p){
+  if(!hasPlan('silver')){ throw new Error('skip: plan') }
+  var key=(getKeys().claude||$('#claudeKey').value||'').trim(); if(!key)throw new Error('skip');
+  var model=(getKeys().claudeModel||$('#claudeModel').value||'claude-sonnet-4-5');
+  var res=await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+    body:JSON.stringify({model,max_tokens:1024,system:p.system,messages:p.history.concat([{role:'user',content:p.userText}])})
+  });
+  if(!res.ok){var e=await res.text().catch(()=>'HTTP '+res.status); throw new Error('Claude: '+e)}
+  var data=await res.json();
+  var tokens=data.usage?(data.usage.input_tokens+data.usage.output_tokens):null;
+  addUsage('Claude',tokens);
+  return {text:(data.content&&data.content[0]&&data.content[0].text||'(no reply)').trim(), provider:'Claude'};
+}
 
-/* ---------- Local (WebLLM) — Safari-proof loading ---------- */
-var webllmEngine=null, webllmLoading=false, localMode='detecting'; // 'webllm'|'lite'
-function setModeBadge(text){modeBadge.textContent='Mode: '+text}
-async function waitForWebLLM(ms){var start=Date.now(); while(!(window&&window.webllm&&window.webllm.CreateMLCEngine)){ if(Date.now()-start>(ms||12000)) throw new Error('WebLLM library missing'); await new Promise(function(r){setTimeout(r,120)}) } return window.webllm.CreateMLCEngine}
+/* ── OPENAI ── */
+async function callOpenAI(p){
+  if(!hasPlan('silver')){ throw new Error('skip: plan') }
+  var key=(getKeys().oa||$('#oaKey').value||'').trim(); if(!key)throw new Error('skip');
+  var mf=(getKeys().oaModel||$('#oaModel').value||'auto').toLowerCase();
+  var list=(mf&&mf!=='auto')?[mf]:OPENAI_CANDIDATES; var lastErr=null;
+  for(var i=0;i<list.length;i++){
+    var model=list[i];
+    var res=await fetch('https://api.openai.com/v1/chat/completions',{
+      method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+      body:JSON.stringify({model,messages:[{role:'system',content:p.system}].concat(p.history).concat([{role:'user',content:p.userText}]),temperature:0.7,max_tokens:512})
+    });
+    if(res.ok){var data=await res.json(); addUsage('OpenAI',data.usage&&data.usage.total_tokens); return {text:(data.choices[0].message.content||'').trim(),provider:'OpenAI'}}
+    else lastErr=await res.text().catch(()=>'HTTP '+res.status);
+  }
+  throw new Error('OpenAI: '+(lastErr||'error'));
+}
+
+/* ── DEEPSEEK ── */
+async function callDeepSeek(p){
+  if(!hasPlan('silver')){ throw new Error('skip: plan') }
+  var key=(getKeys().ds||$('#dsKey').value||'').trim(); if(!key)throw new Error('skip');
+  var mf=(getKeys().dsModel||'auto').toLowerCase();
+  var list=(mf&&mf!=='auto')?[mf]:DEEPSEEK_CANDIDATES; var lastErr=null;
+  for(var i=0;i<list.length;i++){
+    var model=list[i];
+    var res=await fetch('https://api.deepseek.com/chat/completions',{
+      method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+      body:JSON.stringify({model,messages:[{role:'system',content:p.system}].concat(p.history).concat([{role:'user',content:p.userText}]),temperature:0.7,max_tokens:512})
+    });
+    if(res.ok){var data=await res.json(); addUsage('DeepSeek',data.usage&&data.usage.total_tokens); return {text:(data.choices[0].message.content||'').trim(),provider:'DeepSeek'}}
+    else lastErr=await res.text().catch(()=>'HTTP '+res.status);
+  }
+  throw new Error('DeepSeek: '+(lastErr||'error'));
+}
+
+/* ── HF ── */
+async function callHF(p){
+  if(!hasPlan('silver')){ throw new Error('skip: plan') }
+  var key=(getKeys().hf||$('#hfKey').value||'').trim(); if(!key)throw new Error('skip');
+  var model=(getKeys().hfModel||$('#hfModel').value||'google/gemma-2-2b-it');
+  var hist=''; var h=p.history;
+  for(var i=0;i<h.length;i++){hist+=(h[i].role==='user'?'User: ':'Assistant: ')+h[i].content+'\n'}
+  var prompt=p.system+'\n\n'+hist+'User: '+p.userText+'\nAssistant:';
+  var res=await fetch('https://api-inference.huggingface.co/models/'+encodeURIComponent(model),{
+    method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+    body:JSON.stringify({inputs:prompt,parameters:{max_new_tokens:512,temperature:0.7,return_full_text:false}})
+  });
+  if(!res.ok){var e=await res.text().catch(()=>'HTTP '+res.status); throw new Error('HF: '+e)}
+  var data=await res.json(); addUsage('HF',null);
+  var txt=Array.isArray(data)?data[0]&&data[0].generated_text:data.generated_text;
+  return {text:(txt||'(no reply)').trim(), provider:'HF'};
+}
+
+/* ── LOCAL WebLLM ── */
+var webllmEngine=null, webllmLoading=false, localMode='detecting';
+function setModeBadge(text){modeBadge.textContent=text}
 async function ensureLocalWebLLM(){
-  if(webllmEngine||webllmLoading) return;
+  if(webllmEngine||webllmLoading)return;
   webllmLoading=true; diag.textContent='Loading local model…';
   try{
-    var CreateMLCEngine=await waitForWebLLM(12000); // short wait; if fails, we fall back
-    var modelId=$('#localModel').value;
-    webllmEngine=await CreateMLCEngine(modelId,{gpuMemoryUtilization:0.6,streamProgressCallback:function(p){var pc=Math.round(((p&&p.progress)||0)*100); diag.textContent='Loading: '+pc+'%'}});
-    localMode='webllm'; setModeBadge('Local (WebLLM)'); diag.textContent='Local model ready.';
+    var start=Date.now();
+    while(!(window.webllm&&window.webllm.CreateMLCEngine)){
+      if(Date.now()-start>12000)throw new Error('WebLLM missing');
+      await new Promise(r=>setTimeout(r,120));
+    }
+    var modelId=getKeys().localModel||$('#localModel').value;
+    webllmEngine=await window.webllm.CreateMLCEngine(modelId,{gpuMemoryUtilization:0.6,
+      streamProgressCallback:p=>{diag.textContent='Loading: '+Math.round((p.progress||0)*100)+'%'}});
+    localMode='webllm'; setModeBadge('Local WebLLM'); diag.textContent='Local model ready.';
   }catch(e){
-    // hard fallback to Lite
-    localMode='lite'; setModeBadge('Local (Lite)'); diag.textContent='Local (Lite) active.';
+    localMode='lite'; setModeBadge('Lite'); diag.textContent='Local (Lite) active.';
   }finally{webllmLoading=false}
 }
 async function callLocalWebLLM(p){
   await ensureLocalWebLLM();
-  if(localMode!=='webllm') throw new Error('fallback'); // force router to try Lite
+  if(localMode!=='webllm')throw new Error('fallback');
   var messages=[{role:'system',content:p.system}].concat(p.history).concat([{role:'user',content:p.userText}]);
-  var out=''; var idx=chat.push({role:'bot',text:'…'})-1; render();
-  var stream=await webllmEngine.chat.completions.create({messages:messages,stream:true,temperature:0.7,max_tokens:300});
-  try{for await (var ch of stream){var d=(ch&&ch.choices&&ch.choices[0]&&ch.choices[0].delta&&ch.choices[0].delta.content)||''; out+=d; chat[idx].text=out||'…'; render()}}catch(e){}
-  addUsage('Local',null); return (out||'(no reply)').trim()}
-
-/* ---------- Local (Lite) engine ---------- */
-function liteReply(user, sys){
-  var t=user.trim(), lc=t.toLowerCase();
-  // commands
-  if(t==='/help') return "Commands:\n/help • /time • /coin • /echo <text> • /clear • /roll 1d20 • /timer 10s • /sum <text>";
-  if(t==='/time') return 'time: '+new Date().toLocaleString();
-  if(t==='/coin') return Math.random()<0.5?'Heads!':'Tails!';
-  if(/^\/echo\s+/.test(t)) return t.replace(/^\/echo\s+/,'');
-  if(/^\/roll\s+(\d+)d(\d+)\s*$/i.test(t)){var m=t.match(/^\/roll\s+(\d+)d(\d+)\s*$/i),n=+m[1],sides=+m[2],arr=[],sum=0; n=Math.min(n,20); for(var i=0;i<n;i++){var r=1+Math.floor(Math.random()*sides);arr.push(r);sum+=r} return '🎲 '+arr.join(', ')+'  |  total='+sum}
-  if(/^\/timer\s+(\d+)(s|m)$/i.test(t)){var mm=t.match(/^\/timer\s+(\d+)(s|m)$/i),num=+mm[1],unit=mm[2]; var ms=unit==='s'?num*1000:num*60000; setTimeout(function(){chat.push({role:'bot',text:'⏰ Timer done!'});render(); if(speakReplies)speakText('Timer done')},ms); return '⏳ timer set for '+num+unit}
-  if(/^\/sum\s+/.test(t)){var txt=t.replace(/^\/sum\s+/,''); return liteSummarize(txt)}
-  // small talk / memory aware
-  if(/\bhello|hi|hey\b/.test(lc)) return 'hey '+(getUserName()||'there')+'! what should we build next?';
-  if(/your name|who are you/i.test(t)) return "I'm BetterBot DC (Lite).";
-  // fallback: short supportive reply
-  var endings=["cool! want me to add more powers?","nice—try /help for tricks","okay! want a timer or dice roll?","got it—want music while we chat?"];
-  return endings[Math.floor(Math.random()*endings.length)];
+  var out=''; var idx=chat.push({role:'bot',text:'…',provider:'Local'})-1; render();
+  var stream=await webllmEngine.chat.completions.create({messages,stream:true,temperature:0.7,max_tokens:512});
+  try{for await(var ch of stream){var d=(ch.choices[0].delta.content)||''; out+=d; chat[idx].text=out||'…'; render()}}catch(e){}
+  addUsage('Local',null); chat[idx].text=(out||'(no reply)').trim(); render();
+  return {text:chat[idx].text, provider:'Local', streamed:true};
 }
-function liteSummarize(text){
-  // ultra-simple freq summary
-  var s=text.replace(/\s+/g,' ').trim(); if(!s) return '(nothing to summarize)';
-  var sentences=s.split(/(?<=[.!?])\s+/).slice(0,12);
-  var freq={}, words=s.toLowerCase().match(/[a-z']{3,}/g)||[];
-  for(var i=0;i<words.length;i++){var w=words[i]; freq[w]=(freq[w]||0)+1}
-  sentences.sort(function(a,b){
-    function score(str){var sc=0, ws=(str.toLowerCase().match(/[a-z']{3,}/g)||[]); for(var j=0;j<ws.length;j++){sc+=freq[ws[j]]||0} return sc/Math.sqrt(str.length+1)}
-    return score(b)-score(a)
-  });
-  return 'TL;DR:\n- '+sentences.slice(0,3).join('\n- ');
+
+/* ── LITE ── */
+function liteReply(user){
+  var t=user.trim(),lc=t.toLowerCase();
+  if(t==='/help')return 'Commands:\n/help • /time • /coin • /echo <text> • /roll 1d20 • /timer 10s • /sum <text>';
+  if(t==='/time')return 'Time: '+new Date().toLocaleString();
+  if(t==='/coin')return Math.random()<0.5?'Heads! 🪙':'Tails! 🪙';
+  if(/^\/echo\s+/.test(t))return t.replace(/^\/echo\s+/,'');
+  if(/^\/roll\s+(\d+)d(\d+)\s*$/i.test(t)){
+    var m=t.match(/^\/roll\s+(\d+)d(\d+)\s*$/i),n=Math.min(+m[1],20),sides=+m[2],arr=[],sum=0;
+    for(var i=0;i<n;i++){var r=1+Math.floor(Math.random()*sides);arr.push(r);sum+=r}
+    return '🎲 '+arr.join(', ')+'  total='+sum;
+  }
+  if(/^\/timer\s+(\d+)(s|m)$/i.test(t)){
+    var mm=t.match(/^\/timer\s+(\d+)(s|m)$/i),num=+mm[1],unit=mm[2];
+    setTimeout(()=>{chat.push({role:'bot',text:'⏰ Timer done!'});render()},unit==='s'?num*1000:num*60000);
+    return '⏳ Timer set for '+num+unit;
+  }
+  if(/^\/sum\s+/.test(t)){
+    var txt=t.replace(/^\/sum\s+/,'').trim(); if(!txt)return '(nothing to summarize)';
+    var sents=txt.split(/(?<=[.!?])\s+/).slice(0,10);
+    return 'TL;DR:\n- '+sents.slice(0,3).join('\n- ');
+  }
+  if(/\bhello|hi|hey\b/.test(lc))return 'Hey '+getUserName()+'! 👋';
+  if(/your name|who are you/i.test(t))return "I'm BetterBot DC (Free/Lite). Upgrade for full AI!";
+  return ["Try /help for commands!","Want to upgrade? Tap 💎 Plans for cloud AI.","Got it! Type /help for tricks."][Math.floor(Math.random()*3)];
 }
 async function callLocalLite(p){
-  var out=''; var idx=chat.push({role:'bot',text:'…'})-1; render();
-  // pretend stream
-  var reply=liteReply(p.userText,p.system);
-  for(var i=0;i<reply.length;i+=8){await new Promise(function(r){setTimeout(r,10)}); out+=reply.slice(i,i+8); chat[idx].text=out; render()}
-  return out.trim()
+  var reply=liteReply(p.userText); var out='';
+  var idx=chat.push({role:'bot',text:'…',provider:'Lite'})-1; render();
+  for(var i=0;i<reply.length;i+=10){await new Promise(r=>setTimeout(r,12)); out+=reply.slice(i,i+10); chat[idx].text=out; render()}
+  return {text:out.trim(), provider:'Lite', streamed:true};
 }
 
-/* ---------- router ---------- */
-function looksLikeAKey(s){return /(sk-[\w-]{10,}|hf_[\w-]{10,}|AIzaSy|ghp_[\w]{20,}|aws_secret|-----BEGIN)/i.test(s)}
-function mode(){return $('#provider').value||'local'}
+/* ── ROUTER ── */
+function looksLikeAKey(s){return /(sk-[\w-]{10,}|hf_[\w-]{10,}|sk-ant-api|ghp_[\w]{20,}|-----BEGIN)/i.test(s)}
+function mode(){return $('#provider').value||'auto'}
+
 async function askSmart(userText){
-  var payload={system:buildSystem(),history:historyForAPI(),userText:userText};
+  var payload={system:buildSystem(),history:historyForAPI(),userText};
   var m=mode();
-
-  async function tryRun(fn){try{var r=await fn(payload); if(r) return r}catch(e){return null} return null}
-
-  if(m==='openai') return (await tryRun(callOpenAI)) || '(no reply)';
-  if(m==='deepseek')return (await tryRun(callDeepSeek))||'(no reply)';
-  if(m==='hf')     return (await tryRun(callHF))     || '(no reply)';
-  if(m==='local')  { var r=await tryRun(callLocalWebLLM); if(r) return r; return await callLocalLite(payload) }
-  if(m==='lite')   return await callLocalLite(payload);
-
-  // auto chain
-  var r=null;
-  r=await tryRun(callOpenAI); if(r) return r;
-  r=await tryRun(callDeepSeek); if(r) return r;
-  r=await tryRun(callHF); if(r) return r;
-  r=await tryRun(callLocalWebLLM); if(r) return r;
+  async function tryRun(fn){try{var r=await fn(payload);if(r&&r.text)return r}catch(e){return null}return null}
+  var r;
+  if(m==='claude'){r=await tryRun(callClaude); return r||{text:'(no reply — check Claude key & plan)',provider:'Claude'}}
+  if(m==='openai'){r=await tryRun(callOpenAI); return r||{text:'(no reply)',provider:'OpenAI'}}
+  if(m==='deepseek'){r=await tryRun(callDeepSeek); return r||{text:'(no reply)',provider:'DeepSeek'}}
+  if(m==='hf'){r=await tryRun(callHF); return r||{text:'(no reply)',provider:'HF'}}
+  if(m==='local'){r=await tryRun(callLocalWebLLM); if(r&&r.streamed)return r; return await callLocalLite(payload)}
+  if(m==='lite'){return await callLocalLite(payload)}
+  // AUTO
+  r=await tryRun(callClaude); if(r)return r;
+  r=await tryRun(callOpenAI); if(r)return r;
+  r=await tryRun(callDeepSeek); if(r)return r;
+  r=await tryRun(callHF); if(r)return r;
+  r=await tryRun(callLocalWebLLM); if(r&&r.streamed)return r;
   return await callLocalLite(payload);
 }
 
-/* ---------- send/test ---------- */
+/* ── SEND ── */
 var msgBox=document.getElementById('msg');
-msgBox.addEventListener('keydown',function(e){ if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send()}});
+msgBox.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send()}});
+const LITE_CMD_RE=/^(\/help|\/time|\/coin|\/echo |\/roll \d+d\d+|\/timer \d+(s|m)$|\/sum )/i;
 async function send(){
   var t=(msgBox.value||'').trim(); if(!t)return;
-  if(looksLikeAKey(t)){alert('Blocked: that looks like a secret key.'); return;}
+  if(looksLikeAKey(t)){alert('⚠️ That looks like an API key — paste it in the Keys panel instead.');return}
   msgBox.value=''; chat.push({role:'user',text:t}); render();
-  // fast local commands handled here too
-  if(t==='/help'||t==='/time'||t==='/coin'||/^\/echo /.test(t)||/^\/roll \d+d\d+$/i.test(t)||/^\/timer \d+(s|m)$/i.test(t)||/^\/sum /.test(t)){
-    var reply=liteReply(t,''); chat.push({role:'bot',text:reply}); render(); if(speakReplies)speakText(reply); return;
+  if(LITE_CMD_RE.test(t)){
+    var rep=liteReply(t); chat.push({role:'bot',text:rep,provider:'Lite'}); render();
+    if(speakReplies)speakText(rep); return;
   }
+  diag.textContent='Thinking…';
   try{
-    var reply=await askSmart(t);
-    chat.push({role:'bot',text:reply}); render(); if(speakReplies)speakText(reply); diag.textContent='';
+    var result=await askSmart(t);
+    if(!result.streamed){chat.push({role:'bot',text:result.text,provider:result.provider});render()}
+    if(speakReplies)speakText(result.text||'');
+    diag.textContent=''; setModeBadge(result.provider||'?');
   }catch(e){
-    chat.push({role:'bot',text:'Error: '+(e&&e.message||e)}); render(); diag.textContent=(e&&e.message||e);
+    chat.push({role:'bot',text:'Error: '+(e.message||e)}); render(); diag.textContent=e.message||e;
   }
 }
-async function testProvider(){diag.textContent='Testing…'; try{await askSmart('Say hi in one short sentence.'); diag.textContent='Provider OK ✅'}catch(e){diag.textContent='Provider error ❌ '+(e&&e.message||e)}}
 
-/* ---------- sessions ---------- */
+/* ── SESSIONS ── */
 function sessionKey(id){return 'bb_session_'+id}
 function loadSessionList(){try{return JSON.parse(localStorage.getItem('bb_sessions_v1')||'[]')}catch(e){return[]}}
 function saveSessionList(list){localStorage.setItem('bb_sessions_v1',JSON.stringify(list))}
-function refreshChatSelect(){var sel=$('#chatSelect'); var list=loadSessionList(); sel.innerHTML=''; var opt=document.createElement('option');opt.value='__current__';opt.textContent='(unsaved current chat)'; sel.appendChild(opt);
- for(var i=0;i<list.length;i++){var o=document.createElement('option');o.value=list[i].id;o.textContent=list[i].title; sel.appendChild(o)} sel.value=currentSessionId||'__current__'}
-function newChat(){chat=[{role:'bot',text:'New chat. What should we do?'}]; currentSessionId=null; render(); refreshChatSelect()}
-function saveChat(){var firstUser=''; for(var i=0;i<chat.length;i++){if(chat[i].role==='user'){firstUser=chat[i].text;break}} var title=prompt('Name this chat:',(firstUser||'Untitled').slice(0,40))||(firstUser||'Untitled').slice(0,40);
- var id=currentSessionId||String(Date.now()); localStorage.setItem(sessionKey(id),JSON.stringify(chat));
- var list=loadSessionList().filter(function(s){return s.id!==id}); list.unshift({id:id,title:title}); saveSessionList(list); currentSessionId=id; refreshChatSelect(); alert('Saved!')}
-function deleteChat(){var sel=$('#chatSelect'); if(sel.value==='__current__'){alert('Select a saved chat to delete.');return}
- if(!confirm('Delete this saved chat?'))return; localStorage.removeItem(sessionKey(sel.value)); saveSessionList(loadSessionList().filter(function(s){return s.id!==sel.value})); currentSessionId=null; refreshChatSelect()}
-$('#chatSelect').addEventListener('change',function(){var id=$('#chatSelect').value; if(id==='__current__'){currentSessionId=null;return}
- var raw=localStorage.getItem(sessionKey(id)); if(!raw){alert('Missing chat data');return} chat=JSON.parse(raw); currentSessionId=id; render()})
+function refreshChatSelect(){
+  var sel=$('#chatSelect'),list=loadSessionList(); sel.innerHTML='';
+  var opt=document.createElement('option');opt.value='__current__';opt.textContent='(unsaved)';sel.appendChild(opt);
+  list.forEach(s=>{var o=document.createElement('option');o.value=s.id;o.textContent=s.title;sel.appendChild(o)});
+  sel.value=currentSessionId||'__current__';
+}
+function newChat(){chat=[{role:'bot',text:'New chat started!'}];currentSessionId=null;render();refreshChatSelect()}
+function saveChat(){
+  var fu='';for(var i=0;i<chat.length;i++){if(chat[i].role==='user'){fu=chat[i].text;break}}
+  var title=prompt('Chat name:',(fu||'Untitled').slice(0,40))||(fu||'Untitled').slice(0,40);
+  var id=currentSessionId||String(Date.now());
+  localStorage.setItem(sessionKey(id),JSON.stringify(chat));
+  var list=loadSessionList().filter(s=>s.id!==id); list.unshift({id,title});
+  saveSessionList(list); currentSessionId=id; refreshChatSelect(); alert('Saved!');
+}
+function deleteChat(){
+  var sel=$('#chatSelect'); if(sel.value==='__current__'){alert('Select a saved chat.');return}
+  if(!confirm('Delete?'))return;
+  localStorage.removeItem(sessionKey(sel.value));
+  saveSessionList(loadSessionList().filter(s=>s.id!==sel.value));
+  currentSessionId=null; refreshChatSelect();
+}
+$('#chatSelect').addEventListener('change',()=>{
+  var id=$('#chatSelect').value; if(id==='__current__'){currentSessionId=null;return}
+  var raw=localStorage.getItem(sessionKey(id)); if(!raw)return;
+  chat=JSON.parse(raw); currentSessionId=id; render();
+});
 refreshChatSelect();
-/* autosave */
 function autosave(){try{localStorage.setItem('__bb_autosave__',JSON.stringify(chat))}catch(e){}}
-var _render_original=render; render=function(){_render_original(); autosave()}
-;(function(){var saved=localStorage.getItem('__bb_autosave__'); if(saved&&chat.length<=1){try{chat=JSON.parse(saved); render()}catch(e){}}})()
-function downloadChat(){var lines=''; for(var i=0;i<chat.length;i++){lines+=chat[i].role.toUpperCase()+': '+chat[i].text+'\n\n'} var blob=new Blob([lines],{type:'text/plain'});
- var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='betterbot-chat.txt'; a.click(); setTimeout(function(){URL.revokeObjectURL(a.href)},1000)}
+var _r0=render; render=function(){_r0();autosave()};
+(function(){var s=localStorage.getItem('__bb_autosave__');if(s&&chat.length<=1){try{chat=JSON.parse(s);render()}catch(e){}}})();
+function downloadChat(){
+  var lines=chat.map(m=>m.role.toUpperCase()+(m.provider?'['+m.provider+']':'')+': '+m.text).join('\n\n');
+  var blob=new Blob([lines],{type:'text/plain'}); var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob); a.download='betterbot-chat.txt'; a.click();
+}
 
-/* ---------- mic + tts ---------- */
+/* ── MIC + TTS (plan-gated) ── */
 var rec=null, listening=false;
-function toggleMic(){var btn=$('#micBtn'); var SR=window.SpeechRecognition||window.webkitSpeechRecognition; if(!SR){alert('Speech recognition not supported. Try Chrome.');return}
- if(!rec){rec=new SR(); rec.lang='en-AU'; rec.interimResults=true; rec.maxAlternatives=1;
-   rec.onresult=function(e){var txt=''; for(var i=e.resultIndex;i<e.results.length;i++){txt+=e.results[i][0].transcript} $('#msg').value=txt};
-   rec.onend=function(){listening=false; btn.textContent='🎙️ Mic'; btn.classList.remove('ghost'); btn.classList.add('secondary')};
-   rec.onerror=function(){listening=false; btn.textContent='🎙️ Mic'; btn.classList.remove('ghost'); btn.classList.add('secondary')}} 
- if(!listening){try{rec.start(); listening=true; btn.textContent='🛑 Stop'; btn.classList.remove('secondary'); btn.classList.add('ghost')}catch(e){}} else {try{rec.stop()}catch(e){} }}
-function toggleTTS(){speakReplies=!speakReplies; $('#ttsBtn').textContent=speakReplies?'🔊 Speak: On':'🔊 Speak: Off'}
-function speakText(t){try{speechSynthesis.cancel(); var u=new SpeechSynthesisUtterance(t); u.rate=1; u.pitch=1; u.lang='en-AU'; speechSynthesis.speak(u)}catch(e){}}
-
-/* ---------- music ---------- */
-var frame=$('#playerFrame'); function validUrl(u){try{var x=new URL(u); return x.protocol.indexOf('http')===0}catch(e){return false}}
-function ensureEmbed(url){try{var u=new URL(url); if(u.hostname==='open.spotify.com'&&u.pathname.indexOf('/embed')!==0){u.pathname='/embed'+u.pathname; return u.toString()} return url}catch(e){return url}}
-function setStation(u){var url=(u||'').trim(); if(!url){alert('Paste an embed URL.');return} url=ensureEmbed(url); if(!validUrl(url)){alert('Invalid URL');return} frame.src=url; localStorage.setItem('bb_station_url',url)}
-;(function(){var last=localStorage.getItem('bb_station_url'); if(last) setStation(last); else setStation('https://www.youtube.com/embed/videoseries?list=PLMC9KNkIncKtPzgY-5rmhvj7fax8fdxoj')})()
-
-/* ---------- theme toggle ---------- */
-var blueOn=true; document.getElementById('blueBtn').onclick=function(){var r=document.documentElement.style;
- if(blueOn){r.setProperty('--accent','#9333ea'); r.setProperty('--accent2','#a855f7'); r.setProperty('--panel','#171421'); r.setProperty('--bg','#0c0a12'); this.textContent='Blue OFF'}
- else{r.setProperty('--accent','#1e3a8a'); r.setProperty('--accent2','#2563eb'); r.setProperty('--panel','#0f172a'); r.setProperty('--bg','#0b1022'); this.textContent='Blue ON'} blueOn=!blueOn}
-
-/* ---------- PWA install + generator ---------- */
-var deferredPrompt=null; window.addEventListener('beforeinstallprompt',function(e){e.preventDefault(); deferredPrompt=e; var b=$('#installBtn'); b.style.display=''; b.onclick=function(){if(!deferredPrompt)return; deferredPrompt.prompt(); deferredPrompt=null; b.style.display='none'}})
-if('serviceWorker' in navigator){navigator.serviceWorker.register('service-worker.js').catch(function(){})}
-document.getElementById('makePwaBtn').addEventListener('click',async function(){
- var filename=location.pathname.split('/').pop()||'app.html';
- var manifest={name:"BetterBot DC",short_name:"BetterBot DC",description:"Super app with manual memory and provider fallback.",start_url:".",scope:"./",display:"standalone",theme_color:"#0f172a",background_color:"#0f172a",icons:[{src:"icons/icon-192.png",sizes:"192x192",type:"image/png",purpose:"any maskable"},{src:"icons/icon-512.png",sizes:"512x512",type:"image/png",purpose:"any maskable"}]};
- var sw="const CACHE='betterbot-super-v1';const ASSETS=['./','"+filename+"','manifest.webmanifest','icons/icon-192.png','icons/icon-512.png'];self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS))) });self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k))))) });self.addEventListener('fetch',e=>{const url=new URL(e.request.url);const isAPI=/api\\.openai\\.com|api\\.deepseek\\.com|api-inference\\.huggingface\\.co/.test(url.host);if(isAPI)return; if(url.origin!==location.origin && !/\\.(css|js|png|jpg|jpeg|webp|svg)$/.test(url.pathname))return; e.respondWith(caches.match(e.request).then(c=>c||fetch(e.request).then(r=>{if(e.request.method==='GET'&&url.origin===location.origin){const copy=r.clone();caches.open(CACHE).then(c=>c.put(e.request,copy))}return r}))) })";
- function save(name,text,type){var blob=new Blob([text],{type:type||'text/plain'}); var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; a.click(); setTimeout(function(){URL.revokeObjectURL(a.href)},1000)}
- async function makePng(size){var c=document.createElement('canvas'); c.width=c.height=size; var x=c.getContext('2d'); x.fillStyle='#0f172a'; x.fillRect(0,0,size,size); x.beginPath(); x.arc(size/2,size/2,size*0.42,0,Math.PI*2); x.fillStyle='#2563eb'; x.fill(); x.fillStyle='#fff'; x.font=Math.round(size*0.28)+'px system-ui,-apple-system,Segoe UI,Roboto,sans-serif'; x.textAlign='center'; x.textBaseline='middle'; x.fillText('DC',size/2,size/2+size*0.02); return await new Promise(function(res){c.toBlob(res,'image/png')})}
- var icon192=await makePng(192), icon512=await makePng(512);
- save('manifest.webmanifest',JSON.stringify(manifest,null,2),'application/manifest+json'); save('service-worker.js',sw,'application/javascript');
- function saveBlob(blob,name){var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; a.click(); setTimeout(function(){URL.revokeObjectURL(a.href)},1000)}
- saveBlob(icon192,'icon-192.png'); saveBlob(icon512,'icon-512.png'); alert('Downloaded manifest, service-worker, and icons. Create an "icons" folder next to this file, move icons there, then open via localhost/HTTPS for Install.')})
-
-/* ---------- init ---------- */
-(async function init(){
-  setModeBadge('detecting…');
-  // try to arm WebLLM quickly; if it fails we’ll fall back to Lite in router
-  try{ await ensureLocalWebLLM(); }catch(e){ localMode='lite'; setModeBadge('Local (Lite)') }
-})();
-</script><!-- BetterBot Pro Max: auto provider + remove Test + auto-start -->
-<script>
-(function () {
-  // --- helpers to detect what we can use ---
-  const $ = (s) => document.querySelector(s);
-  const hasOpenAI = () => !!($('#oaKey')?.value || '').trim();
-  const hasDS     = () => !!($('#dsKey')?.value || '').trim();
-  const hasHF     = () => !!($('#hfKey')?.value || '').trim();
-  const hasWebLLM = () => !!(window.webllm && window.webllm.CreateMLCEngine);
-
-  function bestName() {
-    if (hasOpenAI()) return 'OpenAI';
-    if (hasDS())     return 'DeepSeek';
-    if (hasHF())     return 'Hugging Face';
-    if (hasWebLLM()) return 'Local (WebLLM)';
-    return 'Local (Lite)';
+function toggleMic(){
+  if(!hasPlan('silver')){openPlans();return}
+  var btn=$('#micBtn'),SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){alert('Speech recognition needs Chrome.');return}
+  if(!rec){
+    rec=new SR(); rec.lang='en-AU'; rec.interimResults=true; rec.maxAlternatives=1;
+    rec.onresult=e=>{var t='';for(var i=e.resultIndex;i<e.results.length;i++){t+=e.results[i][0].transcript}$('#msg').value=t};
+    rec.onend=()=>{listening=false;btn.textContent='🎙️ Mic';btn.classList.remove('ghost');btn.classList.add('secondary')};
+    rec.onerror=()=>{listening=false;btn.textContent='🎙️ Mic'};
   }
-
-  // --- set dropdown to Auto and update badge text ---
-  function setAutoModeUI() {
-    const prov = document.getElementById('provider');
-    if (prov) prov.value = 'auto';
-    const badge = document.getElementById('modeBadge');
-    if (badge) badge.textContent = 'Mode: Auto • Best = ' + bestName();
-  }
-
-  // --- remove any Test button in the UI ---
-  function removeTestBtn() {
-    const btn =
-      document.querySelector('button[onclick="testProvider()"]') ||
-      document.getElementById('testBtn') ||
-      document.querySelector('button[data-role="test"]');
-    if (btn) btn.remove();
-  }
-
-  // --- auto send a first message and render reply ---
-  async function autoStart() {
-    const first = "Hello " + (document.getElementById('name')?.value || "friend") + "! I’m BetterBot Pro Max — ready to help.";
-
-    // add as if user typed
-    window.chat.push({ role: 'user', text: first });
-    window.render();
-
-    try {
-      const reply = await window.askSmart(first);
-      window.chat.push({ role: 'bot', text: reply });
-      window.render();
-      if (window.speakReplies) window.speakText(reply);
-      document.getElementById('diag').textContent = '';
-    } catch (e) {
-      window.chat.push({ role: 'bot', text: '(startup error) ' + (e?.message || e) });
-      window.render();
-      document.getElementById('diag').textContent = (e?.message || e);
-    }
-  }
-
-  // Run once page scripts are ready
-  document.addEventListener('DOMContentLoaded', () => {
-    setAutoModeUI();
-    removeTestBtn();
-  });
-
-  // Give your existing init() a moment (WebLLM may still be loading), then start
-  setTimeout(() => {
-    setAutoModeUI();
-    autoStart();
-  }, 600);
-})();
-</script>
-
-</body></html>
-<script>
-function setAutoModeUI() {
-  const providerSel = document.getElementById('provider');
-  if (providerSel) providerSel.value = "auto"; // force Pro Max auto chain
+  if(!listening){try{rec.start();listening=true;btn.textContent='🛑 Stop';btn.classList.remove('secondary');btn.classList.add('ghost')}catch(e){}}
+  else{try{rec.stop()}catch(e){}}
 }
-
-function removeTestBtn() {
-  const btn = document.querySelector('button[onclick="testProvider()"]');
-  if (btn && btn.parentNode) btn.parentNode.removeChild(btn);
+function toggleTTS(){
+  if(!hasPlan('silver')){openPlans();return}
+  speakReplies=!speakReplies; $('#ttsBtn').textContent=speakReplies?'🔊 On':'🔊 Off';
 }
+function speakText(t){try{speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(t);u.rate=1;u.lang='en-AU';speechSynthesis.speak(u)}catch(e){}}
 
-async function autoStart() {
-  try {
-    const first = "Hello " + (document.getElementById('name')?.value || "friend") + 
-                  "! I’m BetterBot Pro Max — ready to help.";
-    window.chat.push({ role: 'user', text: first });
-    window.render();
+/* ── MUSIC ── */
+function validUrl(u){try{return new URL(u).protocol.indexOf('http')===0}catch(e){return false}}
+function ensureEmbed(u){try{var x=new URL(u);if(x.hostname==='open.spotify.com'&&!x.pathname.startsWith('/embed')){x.pathname='/embed'+x.pathname;return x.toString()}return u}catch(e){return u}}
+function setStation(u){
+  u=(u||'').trim(); if(!u)return; u=ensureEmbed(u); if(!validUrl(u)){alert('Invalid URL');return}
+  var f=document.getElementById('playerFrame'); if(f)f.src=u; localStorage.setItem('bb_station_url',u);
+}
+(function(){var last=localStorage.getItem('bb_station_url');if(last)setStation(last);else setStation('https://www.youtube.com/embed/videoseries?list=PLMC9KNkIncKtPzgY-5rmhvj7fax8fdxoj')})();
 
-    const reply = await window.askSmart(first);
-    window.chat.push({ role: 'bot', text: reply });
-    window.render();
+/* ── THEME ── */
+var blueOn=true;
+$('#blueBtn').onclick=function(){
+  var r=document.documentElement.style;
+  if(blueOn){r.setProperty('--accent','#9333ea');r.setProperty('--accent2','#a855f7');r.setProperty('--panel','#17142a');r.setProperty('--bg','#0c0a16');this.textContent='💜'}
+  else{r.setProperty('--accent','#1a56db');r.setProperty('--accent2','#3b82f6');r.setProperty('--panel','#0d1628');r.setProperty('--bg','#080d18');this.textContent='🎨'}
+  blueOn=!blueOn;
+};
 
-    if (window.speakReplies) window.speakText(reply);
-    document.getElementById('diag').textContent = '';
-  } catch (e) {
-    window.chat.push({ role: 'bot', text: '(startup error) ' + (e?.message || e) });
-    window.render();
-    document.getElementById('diag').textContent = (e?.message || e);
+/* ── PWA ── */
+var deferredPrompt=null;
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault(); deferredPrompt=e;
+  var b=$('#installBtn'); b.style.display='';
+  b.onclick=()=>{if(!deferredPrompt)return;deferredPrompt.prompt();deferredPrompt=null;b.style.display='none'};
+});
+if('serviceWorker' in navigator) navigator.serviceWorker.register('service-worker.js').catch(()=>{});
+
+$('#makePwaBtn').addEventListener('click',async function(){
+  var k=readKeysFromUI();
+  var manifest={name:"BetterBot DC",short_name:"BetterBotDC",description:"Claude + multi-AI chat PWA",start_url:"./index.html",scope:"./",display:"standalone",orientation:"any",theme_color:"#0d1628",background_color:"#080d18",icons:[{src:"icons/icon-192.png",sizes:"192x192",type:"image/png",purpose:"any maskable"},{src:"icons/icon-512.png",sizes:"512x512",type:"image/png",purpose:"any maskable"}]};
+  var sw="const CACHE='bb-v3';const ASSETS=['./','./index.html','./manifest.webmanifest','./icons/icon-192.png','./icons/icon-512.png'];self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS).catch(()=>{})));self.skipWaiting()});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))));self.clients.claim()});self.addEventListener('fetch',e=>{const url=new URL(e.request.url);if(/api\\.anthropic|api\\.openai|api\\.deepseek|huggingface/.test(url.host)||e.request.method!=='GET')return;e.respondWith(caches.match(e.request).then(c=>c||fetch(e.request).then(r=>{if(url.origin===location.origin){const copy=r.clone();caches.open(CACHE).then(c=>c.put(e.request,copy))}return r}).catch(()=>caches.match('./index.html'))))});";
+  async function makePng(size){
+    var c=document.createElement('canvas'); c.width=c.height=size; var x=c.getContext('2d');
+    x.fillStyle='#080d18'; x.fillRect(0,0,size,size);
+    var g=x.createRadialGradient(size/2,size/2,0,size/2,size/2,size*0.46);
+    g.addColorStop(0,'#1d4ed8'); g.addColorStop(1,'#0a1a3a');
+    x.beginPath(); x.arc(size/2,size/2,size*0.44,0,Math.PI*2); x.fillStyle=g; x.fill();
+    x.beginPath(); x.arc(size/2,size/2,size*0.44,Math.PI*0.65,Math.PI*1.35);
+    x.strokeStyle='#e8722a'; x.lineWidth=size*0.07; x.stroke();
+    x.fillStyle='#fff'; x.font='bold '+Math.round(size*0.23)+'px system-ui'; x.textAlign='center'; x.textBaseline='middle';
+    x.fillText('DC',size/2,size/2-size*0.02);
+    x.fillStyle='#93c5fd'; x.font=Math.round(size*0.1)+'px system-ui';
+    x.fillText('BetterBot',size/2,size/2+size*0.19);
+    return new Promise(r=>c.toBlob(r,'image/png'));
   }
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  setAutoModeUI();
-  removeTestBtn();
+  function dl(text,name,type){var blob=new Blob([text],{type:type||'text/plain'});var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click()}
+  function dlB(blob,name){var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click()}
+  var i192=await makePng(192), i512=await makePng(512);
+  dl(JSON.stringify(manifest,null,2),'manifest.webmanifest','application/manifest+json');
+  await new Promise(r=>setTimeout(r,250));
+  dl(sw,'service-worker.js','application/javascript');
+  await new Promise(r=>setTimeout(r,250));
+  dlB(i192,'icon-192.png'); await new Promise(r=>setTimeout(r,250));
+  dlB(i512,'icon-512.png');
+  setTimeout(()=>alert('✅ 4 PWA files downloaded!\n\n1. Save this page as index.html\n2. Put manifest & service-worker.js next to it\n3. Create icons/ folder, put icons inside\n4. Serve via HTTPS or localhost\n5. Install button appears!\n\n🔑 Keys are in localStorage — persist through install automatically.'),500);
 });
 
-// wait a moment for WebLLM init, then auto greet
-setTimeout(() => {
-  setAutoModeUI();
-  autoStart();
-}, 600);
-</script>
-<!-- ===== BetterBot: Loading + Sign-in Gate + Beta Advanced ===== -->
-<script>
-(function () {
-  /* ---------- CONFIG ---------- */
-  const GOOGLE_CLIENT_ID = "REPLACE_ME.apps.googleusercontent.com"; // get one at console.cloud.google.com (OAuth -> Web client)
-  const BETA_EMAILS = ["Neeraj.raje@gmail.com"];                    // who gets Beta Advanced
-  const LOGO_SRC = "DRAR%20CARS%20Logo%20on%20Speedway.png";        // your logo in repo (space-safe)
-
-  /* ---------- STYLE ---------- */
-  const css = `
-  #bbGate{position:fixed;inset:0;background:#0b1022cc;backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;z-index:999999}
-  #bbCard{width:min(560px,92vw);background:#0f172a;border:1px solid #1f2937;border-radius:18px;padding:18px;color:#e5e7eb;box-shadow:0 10px 30px rgba(0,0,0,.4)}
-  #bbCard h3{margin:0 0 8px 0;font-size:18px}
-  #bbLogo{display:block;margin:0 auto 10px auto;width:96px;height:96px;border-radius:18px;background:#0b1022 url("${LOGO_SRC}") center/cover no-repeat;border:1px solid #1f2937}
-  #bbBar{height:10px;border-radius:999px;background:#111827;overflow:hidden;border:1px solid #1f2937}
-  #bbFill{height:100%;width:0;background:linear-gradient(90deg,#2563eb,#60a5fa);transition:width .25s ease}
-  #bbTip{margin-top:8px;font-size:12px;color:#93c5fd;text-align:center}
-  #bbBtns{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:14px}
-  .bbBtn{padding:10px 14px;border-radius:12px;border:1px solid #223047;background:#0b1324;color:#e5e7eb;cursor:pointer}
-  .bbBtn.primary{background:#2563eb;border-color:#1e40af}
-  .bbMuted{font-size:12px;color:#94a3b8;text-align:center;margin-top:8px}
-  #bbBetaBadge{margin-left:8px;padding:4px 8px;border-radius:999px;font-size:11px;background:#1d4ed81a;border:1px solid #1d4ed84d;color:#93c5fd}
-  `;
-  const st = document.createElement("style");
-  st.textContent = css;
-  document.head.appendChild(st);
-
-  /* ---------- DOM ---------- */
-  const gate = document.createElement("div");
-  gate.id = "bbGate";
-  gate.innerHTML = `
-    <div id="bbCard">
-      <div id="bbLogo"></div>
-      <h3 style="text-align:center">Loading BetterBot…</h3>
-      <div id="bbBar"><div id="bbFill"></div></div>
-      <div id="bbTip">Tip: You can toggle Blue/Purple theme anytime.</div>
-      <div id="bbBtns" style="display:none">
-        <div id="gsiContainer"></div>
-        <button id="bbGoogleBtn" class="bbBtn primary">Sign in with Google</button>
-        <button id="bbPasskeyBtn" class="bbBtn" disabled title="Needs server; coming soon">Use Passkey</button>
-      </div>
-      <div class="bbMuted">Signing in lets you access Beta Advanced (whitelisted accounts only).</div>
-    </div>`;
-  document.body.appendChild(gate);
-
-  /* ---------- PROGRESS + TIPS ---------- */
-  const tips = [
-    "Tip: Use /help for quick commands (timer, coin, roll, sum).",
-    "Tip: Music station remembers your last link.",
-    "Tip: ‘Remember last’ saves a message into manual memory.",
-    "Tip: Auto provider picks OpenAI → DeepSeek → HF → Local."
-  ];
-  let i = 0, p = 0;
-  const tipEl = document.getElementById("bbTip");
-  const fill = document.getElementById("bbFill");
-  const prog = setInterval(() => {
-    p = Math.min(90, p + Math.random() * 8);
-    fill.style.width = p + "%";
-    tipEl.textContent = tips[i++ % tips.length];
-  }, 700);
-
-  /* ---------- AUTH STATE ---------- */
-  function saveAuth(profile) { localStorage.setItem("__bb_auth__", JSON.stringify(profile)); }
-  function loadAuth() { try { return JSON.parse(localStorage.getItem("__bb_auth__")||"null") } catch(e){ return null } }
-  function isBeta(email) { return BETA_EMAILS.some(x => x.toLowerCase() === (email||"").toLowerCase()); }
-
-  /* ---------- GOOGLE (GIS) ---------- */
-  function loadGSI() {
-    return new Promise(res => {
-      const s = document.createElement("script");
-      s.src = "https://accounts.google.com/gsi/client";
-      s.async = true; s.defer = true; s.onload = res;
-      document.head.appendChild(s);
-    });
-  }
-  function parseJWT(token) {
-    const payload = token.split(".")[1];
-    const json = atob(payload.replace(/-/g,"+").replace(/_/g,"/"));
-    return JSON.parse(decodeURIComponent(escape(json)));
-  }
-  async function initGoogle() {
-    if (!GOOGLE_CLIENT_ID.startsWith("REPLACE_ME")) {
-      await loadGSI();
-      window.google.accounts.id.initialize({
-        client_id: GOOGLE_CLIENT_ID,
-        callback: (resp) => {
-          try {
-            const data = parseJWT(resp.credential);
-            const profile = { email: data.email, name: data.name || data.given_name || "User", picture: data.picture, beta: isBeta(data.email) };
-            saveAuth(profile);
-            afterSignIn(profile);
-          } catch(e) { alert("Google sign-in failed."); }
-        }
-      });
-      // Button render for visual (still keep our fallback button)
-      if (document.getElementById("gsiContainer")) {
-        window.google.accounts.id.renderButton(document.getElementById("gsiContainer"), { theme: "outline", size: "large", shape:"pill", text:"continue_with", width: 260 });
-      }
-      document.getElementById("bbGoogleBtn").onclick = () => window.google.accounts.id.prompt();
-    } else {
-      // Dev fallback if no Client ID: prompt for email
-      document.getElementById("bbGoogleBtn").onclick = () => {
-        const email = prompt("Dev sign-in: enter your Google email (demo only)");
-        if (!email) return;
-        const profile = { email, name: email.split("@")[0], beta: isBeta(email) };
-        saveAuth(profile); afterSignIn(profile);
-      };
-    }
-  }
-
-  /* ---------- AFTER SIGN-IN ---------- */
-  function afterSignIn(profile) {
-    // finish progress
-    clearInterval(prog); fill.style.width = "100%";
-    // set name field if present
-    const nameInput = document.getElementById("name");
-    if (nameInput && profile?.name) nameInput.value = profile.name;
-
-    // Add/Update Beta badge in header
-    const headerRow = document.querySelector(".header .row");
-    if (headerRow && !document.getElementById("bbBetaBadge")) {
-      const b = document.createElement("span");
-      b.id = "bbBetaBadge";
-      b.textContent = profile.beta ? "Beta Advanced ✓" : "Beta Locked";
-      headerRow.appendChild(b);
-    } else if (profile) {
-      const b = document.getElementById("bbBetaBadge");
-      if (b) b.textContent = profile.beta ? "Beta Advanced ✓" : "Beta Locked";
-    }
-
-    // Gate Beta-only actions: add a tiny guard function on window
-    window.requireBeta = function () {
-      const auth = loadAuth();
-      if (auth?.beta) return true;
-      alert("Beta Advanced is only available to approved accounts.\n\nPlease sign in with a beta-enabled Google account.");
-      return false;
-    };
-
-    // hide gate
-    setTimeout(() => { gate.remove(); }, 350);
-  }
-
-  /* ---------- SHOW SIGN-IN OR BYPASS ---------- */
-  function showSignIn() {
-    clearInterval(prog); fill.style.width = "92%";
-    tipEl.textContent = "Sign in to continue (Google recommended).";
-    document.getElementById("bbBtns").style.display = "";
-
-    initGoogle(); // wires Google button (or dev fallback)
-  }
-
-  // If already signed in, skip straight through
-  const existing = loadAuth();
-  if (existing) {
-    // put a badge immediately
-    const headerReady = () => {
-      const headerRow = document.querySelector(".header .row");
-      if (!headerRow) return false;
-      if (!document.getElementById("bbBetaBadge")) {
-        const b = document.createElement("span"); b.id = "bbBetaBadge";
-        b.textContent = existing.beta ? "Beta Advanced ✓" : "Beta Locked";
-        headerRow.appendChild(b);
-      }
-      return true;
-    };
-    const i = setInterval(() => { if (headerReady()) { clearInterval(i); } }, 150);
-
-    afterSignIn(existing);
-  } else {
-    // animate a bit, then ask to sign in
-    setTimeout(showSignIn, 1600);
-  }
-
-  /* ---------- OPTIONAL: protect Beta UI pieces ----------
-     Wrap any Beta-only features with:
-       if (!window.requireBeta || !window.requireBeta()) return;
-  ------------------------------------------------------- */
+/* ── INIT ── */
+(async function init(){
+  setModeBadge('detecting…');
+  var k=getKeys();
+  if(k.claude||k.oa||k.ds||k.hf){setModeBadge('Cloud ready')}
+  else{try{await ensureLocalWebLLM()}catch(e){localMode='lite';setModeBadge('Lite')}}
 })();
 </script>
-<!-- ===== Beta Advanced: enable for any Google sign-in + toggle panel ===== -->
-<script>
-(function () {
-  /* ---------- auth helpers (match your gate storage) ---------- */
-  const AUTH_KEY = "__bb_auth__";
-  const getAuth = () => { try { return JSON.parse(localStorage.getItem(AUTH_KEY) || "null"); } catch { return null; } };
-  const setAuth = (obj) => localStorage.setItem(AUTH_KEY, JSON.stringify(obj || null));
-
-  /* ---------- styles for the panel ---------- */
-  const css = `
-  #bbBetaBtn{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:12px;
-             background:#1f2937;border:1px solid #334155;color:#e5e7eb;cursor:pointer}
-  #bbBetaPanel{position:fixed;inset:auto 12px 12px auto; right:12px; bottom:12px;
-               width:min(420px,92vw); background:#0f172a; color:#e5e7eb; border:1px solid #1f2937;
-               border-radius:14px; padding:14px; box-shadow:0 12px 28px rgba(0,0,0,.35); display:none; z-index:99998}
-  #bbBetaPanel h4{margin:0 0 8px 0;font-size:16px}
-  #bbBetaClose{float:right; cursor:pointer; opacity:.8}
-  #bbBetaPanel .row{display:flex; gap:8px; flex-wrap:wrap; margin:8px 0}
-  #bbBetaPanel .pill{font-size:12px;padding:6px 10px;border-radius:999px;background:#1d4ed81a;border:1px solid #1d4ed84d}
-  `;
-  const st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
-
-  /* ---------- build panel UI ---------- */
-  function ensurePanel() {
-    if (document.getElementById('bbBetaPanel')) return;
-    const panel = document.createElement('div');
-    panel.id = 'bbBetaPanel';
-    panel.innerHTML = `
-      <div>
-        <span id="bbBetaClose">✖</span>
-        <h4>Beta Advanced</h4>
-        <div class="row">
-          <span class="pill">Auto Provider: OpenAI → DeepSeek → HF → Local → Lite</span>
-          <span class="pill">Manual Memory tools enabled</span>
-        </div>
-        <div class="row">
-          <button id="bbForceAuto" class="pill" style="cursor:pointer">Force Auto Mode</button>
-          <button id="bbClearAuth" class="pill" style="cursor:pointer">Sign out</button>
-        </div>
-        <div style="font-size:12px;opacity:.8;margin-top:6px">Signed in as: <span id="bbWho"></span></div>
-      </div>`;
-    document.body.appendChild(panel);
-
-    // wire actions
-    panel.querySelector('#bbBetaClose').onclick = () => panel.style.display = 'none';
-    panel.querySelector('#bbForceAuto').onclick = () => {
-      const sel = document.getElementById('provider');
-      if (sel) sel.value = 'auto';
-      alert('Provider set to Auto (Pro Max).');
-    };
-    panel.querySelector('#bbClearAuth').onclick = () => {
-      localStorage.removeItem(AUTH_KEY);
-      alert('Signed out. Reloading…');
-      location.reload();
-    };
-  }
-
-  function openPanel() {
-    ensurePanel();
-    const who = getAuth();
-    const whoEl = document.getElementById('bbWho');
-    if (whoEl) whoEl.textContent = (who?.email || who?.name || 'unknown');
-    const p = document.getElementById('bbBetaPanel');
-    if (p) p.style.display = 'block';
-  }
-
-  /* ---------- show button in header when signed in ---------- */
-  function ensureButton() {
-    if (document.getElementById('bbBetaBtn')) return;
-    const row = document.querySelector('.header .row');
-    if (!row) return;
-    const btn = document.createElement('button');
-    btn.id = 'bbBetaBtn';
-    btn.innerHTML = 'Beta Advanced';
-    btn.onclick = openPanel;
-    row.appendChild(btn);
-  }
-
-  /* ---------- main: upgrade auth to beta if signed in ---------- */
-  function promoteAnyGoogleToBeta() {
-    const a = getAuth();
-    if (!a) return false;
-    // If user has an email (Google sign-in), grant beta
-    if (a.email && !a.beta) {
-      a.beta = true;
-      setAuth(a);
-    }
-    return true;
-  }
-
-  /* ---------- startup loop: wait until gate saves auth, then patch ---------- */
-  let tries = 0;
-  const tick = setInterval(() => {
-    tries++;
-    const hasAuth = promoteAnyGoogleToBeta();
-    if (hasAuth) {
-      // add “Beta Advanced” controls
-      ensurePanel();
-      ensureButton();
-      // also adjust header badge text if the gate added one
-      const badge = document.getElementById('bbBetaBadge');
-      if (badge) badge.textContent = 'Beta Advanced ✓';
-      clearInterval(tick);
-    }
-    if (tries > 60) clearInterval(tick); // ~9s safety
-  }, 150);
-})();
-</script>
-<!-- BetterBot: consolidated Pro Max (single greet, no tests, no dups) -->
-<script>
-(function () {
-  // prevent double-run if pasted twice
-  if (window.__bb_pro_max_once__) return;
-  window.__bb_pro_max_once__ = true;
-
-  const $ = (s) => document.querySelector(s);
-
-  // 1) Force Auto mode + clean badge
-  const prov = document.getElementById('provider');
-  if (prov) prov.value = 'auto';
-  const badge = document.getElementById('modeBadge');
-  if (badge) badge.textContent = 'Mode: Auto';
-
-  // 2) Remove/hide any Test button
-  (document.querySelector('button[onclick="testProvider()"]')
-    || document.getElementById('testBtn')
-    || document.querySelector('button[data-role="test"]'))?.remove();
-  // if some code still calls testProvider(), neutralize it
-  if (typeof window.testProvider === 'function') {
-    window.testProvider = () => { const d=$('#diag'); if (d) d.textContent=''; };
-  }
-
-  // 3) Remove the stock welcome bubble if it exists as first message
-  try {
-    if (Array.isArray(window.chat) && window.chat.length) {
-      const first = (window.chat[0]?.text || '').toLowerCase();
-      if (first.includes("hi!") && first.includes("i'm betterbot")) {
-        window.chat.shift();
-        if (typeof window.render === 'function') window.render();
-      }
-    }
-  } catch(_) {}
-
-  // 4) Temporary guard to block duplicate auto-greets from earlier snippets
-  let suppress = true;
-  if (Array.isArray(window.chat)) {
-    const origPush = window.chat.push;
-    window.chat.push = function (msg) {
-      if (suppress && msg && msg.role === 'user' &&
-          /i[’']?m betterbot pro max/i.test(msg.text || '')) {
-        return window.chat.length; // drop duplicate
-      }
-      return origPush.apply(window.chat, arguments);
-    };
-    // stop suppressing after startup settles
-    setTimeout(() => { suppress = false; }, 2000);
-  }
-
-  // 5) Single greeting (once) after page settles — no test prompts
-  setTimeout(async () => {
-    try {
-      const name = $('#name')?.value || 'friend';
-      const first = `Hello ${name}! I’m BetterBot Pro Max — ready to help.`;
-
-      // add as if user typed
-      if (Array.isArray(window.chat)) { window.chat.push({ role:'user', text:first }); }
-      if (typeof window.render === 'function') window.render();
-
-      // ask via your router (no explicit provider tests here)
-      const reply = await window.askSmart(first);
-      if (Array.isArray(window.chat)) { window.chat.push({ role:'bot', text:reply }); }
-      if (typeof window.render === 'function') window.render();
-      const diag = $('#diag'); if (diag) diag.textContent = '';
-      if (window.speakReplies) { try { window.speakText(reply); } catch(_) {} }
-    } catch (e) {
-      if (Array.isArray(window.chat)) {
-        window.chat.push({ role:'bot', text:'(startup error) ' + (e?.message || e) });
-      }
-      if (typeof window.render === 'function') window.render();
-      const diag = $('#diag'); if (diag) diag.textContent = (e?.message || e);
-    }
-  }, 600);
-})();
-</script>
-<!-- BetterBot: consolidated Pro Max (single greet, no tests, no dups) -->
-<script>
-(function () {
-  // prevent double-run if pasted twice
-  if (window.__bb_pro_max_once__) return;
-  window.__bb_pro_max_once__ = true;
-
-  const $ = (s) => document.querySelector(s);
-
-  // 1) Force Auto mode + clean badge
-  const prov = document.getElementById('provider');
-  if (prov) prov.value = 'auto';
-  const badge = document.getElementById('modeBadge');
-  if (badge) badge.textContent = 'Mode: Auto';
-
-  // 2) Remove/hide any Test button
-  (document.querySelector('button[onclick="testProvider()"]')
-    || document.getElementById('testBtn')
-    || document.querySelector('button[data-role="test"]'))?.remove();
-  // if some code still calls testProvider(), neutralize it
-  if (typeof window.testProvider === 'function') {
-    window.testProvider = () => { const d=$('#diag'); if (d) d.textContent=''; };
-  }
-
-  // 3) Remove the stock welcome bubble if it exists as first message
-  try {
-    if (Array.isArray(window.chat) && window.chat.length) {
-      const first = (window.chat[0]?.text || '').toLowerCase();
-      if (first.includes("hi!") && first.includes("i'm betterbot")) {
-        window.chat.shift();
-        if (typeof window.render === 'function') window.render();
-      }
-    }
-  } catch(_) {}
-
-  // 4) Temporary guard to block duplicate auto-greets from earlier snippets
-  let suppress = true;
-  if (Array.isArray(window.chat)) {
-    const origPush = window.chat.push;
-    window.chat.push = function (msg) {
-      if (suppress && msg && msg.role === 'user' &&
-          /i[’']?m betterbot pro max/i.test(msg.text || '')) {
-        return window.chat.length; // drop duplicate
-      }
-      return origPush.apply(window.chat, arguments);
-    };
-    // stop suppressing after startup settles
-    setTimeout(() => { suppress = false; }, 2000);
-  }
-
-  // 5) Single greeting (once) after page settles — no test prompts
-  setTimeout(async () => {
-    try {
-      const name = $('#name')?.value || 'friend';
-      const first = `Hello ${name}! I’m BetterBot Pro Max — ready to help.`;
-
-      // add as if user typed
-      if (Array.isArray(window.chat)) { window.chat.push({ role:'user', text:first }); }
-      if (typeof window.render === 'function') window.render();
-
-      // ask via your router (no explicit provider tests here)
-      const reply = await window.askSmart(first);
-      if (Array.isArray(window.chat)) { window.chat.push({ role:'bot', text:reply }); }
-      if (typeof window.render === 'function') window.render();
-      const diag = $('#diag'); if (diag) diag.textContent = '';
-      if (window.speakReplies) { try { window.speakText(reply); } catch(_) {} }
-    } catch (e) {
-      if (Array.isArray(window.chat)) {
-        window.chat.push({ role:'bot', text:'(startup error) ' + (e?.message || e) });
-      }
-      if (typeof window.render === 'function') window.render();
-      const diag = $('#diag'); if (diag) diag.textContent = (e?.message || e);
-    }
-  }, 600);
-})();
-</script>
-  <!-- ===== BetterBot: Provider Launcher (No-API Keys) ===== -->
-  <div class="card">
-    <h3>🚀 Provider Launcher (no API keys)</h3>
-    <p class="muted">
-      This card helps you take your Title/Style/Voice/Lyrics and send them to external AI providers.  
-      Options: Copy prompt, download prompt, download lyrics, or open a provider (auto-copies prompt).
-    </p>
-
-    <div style="margin:8px 0;">
-      <button onclick="copyPrompt()">📋 Copy Prompt</button>
-      <button onclick="downloadPrompt()">⬇️ Download Prompt</button>
-      <button onclick="downloadLyrics()">⬇️ Download Lyrics</button>
-      <span id="prov-msg" class="muted"></span>
-    </div>
-
-    <h4>🎶 Music / Song Generators</h4>
-    <ul>
-      <li><a href="#" onclick="openProvider('https://www.udio.com/'); return false;">Udio</a></li>
-      <li><a href="#" onclick="openProvider('https://suno.com/'); return false;">Suno</a></li>
-      <li><a href="#" onclick="openProvider('https://www.beatoven.ai/'); return false;">Beatoven</a></li>
-      <li><a href="#" onclick="openProvider('https://soundraw.io/'); return false;">SOUNDRAW</a></li>
-    </ul>
-
-    <h4>🖼️ Image / Cover Art</h4>
-    <ul>
-      <li><a href="#" onclick="openProvider('https://playground.com/'); return false;">Playground AI</a></li>
-      <li><a href="#" onclick="openProvider('https://lexica.art/'); return false;">Lexica</a></li>
-      <li><a href="#" onclick="openProvider('https://www.craiyon.com/'); return false;">Craiyon</a></li>
-    </ul>
-
-    <h4>🎞️ Video Tools</h4>
-    <ul>
-      <li><a href="#" onclick="openProvider('https://pika.art/'); return false;">Pika Labs</a></li>
-      <li><a href="#" onclick="openProvider('https://runwayml.com/'); return false;">Runway</a></li>
-      <li><a href="#" onclick="openProvider('https://www.capcut.com/'); return false;">CapCut Web</a></li>
-      <li><a href="#" onclick="openProvider('https://www.canva.com/'); return false;">Canva</a></li>
-    </ul>
-  </div>
-
-  <script>
-    // Build a prompt from current form values
-    function buildPrompt(){
-      const title  = (document.getElementById('msc-title')?.value || 'Untitled').trim();
-      const style  = (document.getElementById('msc-style')?.value || 'pop').trim();
-      const voice  = (document.getElementById('msc-voice')?.value || 'female').trim();
-      const lyrics = (document.getElementById('msc-lyrics')?.value || '').trim();
-
-      const lines = [];
-      lines.push(`Create a ${style} song titled "${title}" with ${voice} vocals.`);
-      lines.push(`Keep it clean, uplifting, and family-friendly.`);
-      if (lyrics) {
-        lines.push(`Use these lyrics (line-preserving):\n${lyrics}`);
-      } else {
-        lines.push(`Generate simple, positive, singable lyrics about shining again.`);
-      }
-      return lines.join('\n');
-    }
-
-    // Copy prompt only
-    async function copyPrompt(){
-      const prompt = buildPrompt();
-      try {
-        await navigator.clipboard.writeText(prompt);
-        setMsg("📋 Prompt copied to clipboard.");
-      } catch {
-        setMsg("⚠️ Could not copy. Use ⬇️ Download Prompt instead.");
-      }
-    }
-
-    // Open provider and auto-copy prompt
-    async function openProvider(url){
-      const prompt = buildPrompt();
-      try {
-        await navigator.clipboard.writeText(prompt);
-        setMsg("✅ Prompt copied. Opening provider…");
-      } catch {
-        setMsg("⚠️ Could not copy. Use ⬇️ Download Prompt.");
-      }
-      window.open(url, '_blank', 'noopener,noreferrer');
-    }
-
-    // Download prompt as text file
-    function downloadPrompt(){
-      const prompt = buildPrompt();
-      downloadText('prompt.txt', prompt);
-      setMsg("⬇️ prompt.txt downloaded.");
-    }
-
-    // Download lyrics as text file
-    function downloadLyrics(){
-      const lyrics = (document.getElementById('msc-lyrics')?.value || '').trim();
-      if (!lyrics) { setMsg("⚠️ No lyrics to download."); return; }
-      downloadText('lyrics.txt', lyrics);
-      setMsg("⬇️ lyrics.txt downloaded.");
-    }
-
-    // Helpers
-    function downloadText(filename, text){
-      const blob = new Blob([text], { type: 'text/plain' });
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-    }
-
-    function setMsg(t){
-      const el = document.getElementById('prov-msg');
-      if (!el) return;
-      el.textContent = t;
-      setTimeout(()=>{ el.textContent = ""; }, 3000);
-    }
-  </script>
-  <!-- ===== End Provider Launcher ===== -->
-    <script>
-    // === CANCEL OLD PROVIDER LAUNCHER IF PRESENT ===
-    document.addEventListener("DOMContentLoaded", () => {
-      // Find any old Provider Launcher cards and remove them
-      document.querySelectorAll(".card h3").forEach(h3 => {
-        if (h3.textContent.includes("Provider Launcher")) {
-          h3.parentElement.remove();
-        }
-      });
-
-      // === NEW PROVIDER LAUNCHER CARD ===
-      const uploadCard = Array.from(document.querySelectorAll(".card h3"))
-        .find(h3 => h3.textContent.includes("Upload a File"));
-      if (!uploadCard) return;
-
-      const container = uploadCard.parentElement;
-      const newCard = document.createElement("div");
-      newCard.className = "card";
-      newCard.innerHTML = `
-        <h3>🚀 Provider Launcher (no API keys)</h3>
-        <p class="muted">
-          Take your Title/Style/Voice/Lyrics and send them to external AI providers.<br>
-          Options: Copy prompt, download prompt, download lyrics, or open a provider (auto-copies prompt).
-        </p>
-
-        <div style="margin:8px 0;">
-          <button onclick="copyPrompt()">📋 Copy Prompt</button>
-          <button onclick="downloadPrompt()">⬇️ Download Prompt</button>
-          <button onclick="downloadLyrics()">⬇️ Download Lyrics</button>
-          <span id="prov-msg" class="muted"></span>
-        </div>
-
-        <h4>🎶 Music / Song Generators</h4>
-        <ul>
-          <li><a href="#" onclick="openProvider('https://www.udio.com/'); return false;">Udio</a></li>
-          <li><a href="#" onclick="openProvider('https://suno.com/'); return false;">Suno</a></li>
-          <li><a href="#" onclick="openProvider('https://www.beatoven.ai/'); return false;">Beatoven</a></li>
-          <li><a href="#" onclick="openProvider('https://soundraw.io/'); return false;">SOUNDRAW</a></li>
-        </ul>
-
-        <h4>🖼️ Image / Cover Art</h4>
-        <ul>
-          <li><a href="#" onclick="openProvider('https://playground.com/'); return false;">Playground AI</a></li>
-          <li><a href="#" onclick="openProvider('https://lexica.art/'); return false;">Lexica</a></li>
-          <li><a href="#" onclick="openProvider('https://www.craiyon.com/'); return false;">Craiyon</a></li>
-        </ul>
-
-        <h4>🎞️ Video Tools</h4>
-        <ul>
-          <li><a href="#" onclick="openProvider('https://pika.art/'); return false;">Pika Labs</a></li>
-          <li><a href="#" onclick="openProvider('https://runwayml.com/'); return false;">Runway</a></li>
-          <li><a href="#" onclick="openProvider('https://www.capcut.com/'); return false;">CapCut Web</a></li>
-          <li><a href="#" onclick="openProvider('https://www.canva.com/'); return false;">Canva</a></li>
-        </ul>
-      `;
-      container.insertAdjacentElement("afterend", newCard);
-    });
-
-    // === Shared Helper Functions ===
-    function buildPrompt(){
-      const title  = (document.getElementById('msc-title')?.value || 'Untitled').trim();
-      const style  = (document.getElementById('msc-style')?.value || 'pop').trim();
-      const voice  = (document.getElementById('msc-voice')?.value || 'female').trim();
-      const lyrics = (document.getElementById('msc-lyrics')?.value || '').trim();
-
-      const lines = [];
-      lines.push(\`Create a \${style} song titled "\${title}" with \${voice} vocals.\`);
-      lines.push("Keep it clean, uplifting, and family-friendly.");
-      if (lyrics) {
-        lines.push("Use these lyrics (line-preserving):\\n" + lyrics);
-      } else {
-        lines.push("Generate simple, positive, singable lyrics about shining again.");
-      }
-      return lines.join('\\n');
-    }
-
-    async function copyPrompt(){
-      const prompt = buildPrompt();
-      try {
-        await navigator.clipboard.writeText(prompt);
-        setMsg("📋 Prompt copied to clipboard.");
-      } catch {
-        setMsg("⚠️ Could not copy. Use ⬇️ Download Prompt instead.");
-      }
-    }
-
-    async function openProvider(url){
-      const prompt = buildPrompt();
-      try {
-        await navigator.clipboard.writeText(prompt);
-        setMsg("✅ Prompt copied. Opening provider…");
-      } catch {
-        setMsg("⚠️ Could not copy. Use ⬇️ Download Prompt.");
-      }
-      window.open(url, '_blank', 'noopener,noreferrer');
-    }
-
-    function downloadPrompt(){
-      const prompt = buildPrompt();
-      downloadText('prompt.txt', prompt);
-      setMsg("⬇️ prompt.txt downloaded.");
-    }
-
-    function downloadLyrics(){
-      const lyrics = (document.getElementById('msc-lyrics')?.value || '').trim();
-      if (!lyrics) { setMsg("⚠️ No lyrics to download."); return; }
-      downloadText('lyrics.txt', lyrics);
-      setMsg("⬇️ lyrics.txt downloaded.");
-    }
-
-    function downloadText(filename, text){
-      const blob = new Blob([text], { type: 'text/plain' });
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-    }
-
-    function setMsg(t){
-      const el = document.getElementById('prov-msg');
-      if (!el) return;
-      el.textContent = t;
-      setTimeout(()=>{ el.textContent = ""; }, 3000);
-    }
-  </script>
 </body></html>
