@@ -149,6 +149,97 @@ iframe{border:0;border-radius:12px}
   #log{height:min(340px,50vh)}
   .plans-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
 }
+
+/* ═══ ZAP MAX MODE ═══ */
+:root.zap-mode {
+  --bg:#0a0005;--panel:#130010;--panel2:#1a0018;--border:#3d0050;
+  --accent:#b400ff;--accent2:#e040fb;--text:#f5e6ff;--muted:#9c7ab0;
+  --zap:#ffdd00;--zap2:#ff6a00;
+}
+body.zap-mode { background: var(--bg); }
+.zap-mode .container::before {
+  content:''; position:fixed; inset:0; pointer-events:none; z-index:0;
+  background: radial-gradient(ellipse at 50% -10%, #b400ff22 0%, transparent 70%),
+              radial-gradient(ellipse at 80% 110%, #ff6a0018 0%, transparent 60%);
+}
+/* ZAP MAX button — glowing electric */
+.btn.zap-btn {
+  background: linear-gradient(135deg,#ffdd00,#ff6a00);
+  border: none; color: #000; font-weight:900; font-size:13px;
+  box-shadow: 0 0 18px #ffdd0088, 0 0 36px #ff6a0044;
+  animation: zapPulse 2s ease-in-out infinite;
+  position:relative; overflow:hidden;
+}
+.btn.zap-btn.active {
+  box-shadow: 0 0 28px #ffdd00cc, 0 0 56px #ff6a0077;
+  animation: zapPulse 0.8s ease-in-out infinite;
+}
+.btn.zap-btn::after {
+  content:''; position:absolute; inset:0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+  transform: translateX(-100%);
+  animation: zapShine 2.5s ease-in-out infinite;
+}
+@keyframes zapPulse {
+  0%,100%{box-shadow:0 0 18px #ffdd0088,0 0 36px #ff6a0044}
+  50%{box-shadow:0 0 32px #ffdd00cc,0 0 64px #ff6a0088}
+}
+@keyframes zapShine {
+  0%{transform:translateX(-100%)} 60%,100%{transform:translateX(100%)}
+}
+/* ZAP Max chat bubble */
+.bubble.zap-bubble {
+  background: linear-gradient(135deg, #1a0025, #120018);
+  border-left: 3px solid #ffdd00;
+  position: relative;
+}
+.bubble.zap-bubble::before {
+  content: '⚡';
+  position: absolute; left: -2px; top: -10px;
+  font-size: 14px; animation: zapBolt 1s ease-in-out infinite alternate;
+}
+@keyframes zapBolt { 0%{opacity:.5;transform:scale(.9)} 100%{opacity:1;transform:scale(1.1)} }
+/* ZAP Max header banner */
+#zapBanner {
+  display:none; background:linear-gradient(135deg,#1a0025,#0a0010);
+  border:1px solid #b400ff55; border-radius:14px; padding:10px 14px;
+  margin:8px 0; position:relative; overflow:hidden;
+}
+#zapBanner::before {
+  content:''; position:absolute; inset:0;
+  background:linear-gradient(90deg,transparent,#b400ff15,transparent);
+  animation:zapScan 3s linear infinite;
+}
+@keyframes zapScan{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+#zapBanner.on { display:flex; align-items:center; gap:10px; }
+.zap-avatar {
+  width:44px;height:44px;border-radius:50%;flex-shrink:0;
+  background: linear-gradient(135deg,#ffdd00,#ff6a00,#b400ff);
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;box-shadow:0 0 16px #ffdd0066;
+  animation: zapAvatar 3s ease-in-out infinite;
+}
+@keyframes zapAvatar{0%,100%{box-shadow:0 0 16px #ffdd0066}50%{box-shadow:0 0 28px #ffdd00cc,0 0 48px #b400ff66}}
+.zap-title { font-weight:900; font-size:15px; background:linear-gradient(135deg,#ffdd00,#ff6a00); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.zap-sub { font-size:11px; color:#c084fc; margin-top:2px; }
+/* ZAP mode features pill row */
+#zapFeatures { display:flex; gap:6px; flex-wrap:wrap; margin:6px 0; }
+.zap-feat { font-size:10px; padding:3px 9px; border-radius:999px; background:#ffdd0015; border:1px solid #ffdd0040; color:#ffdd00; font-weight:600; }
+/* Trivia / game card */
+.zap-card {
+  background:#130010; border:1px solid #b400ff44; border-radius:14px;
+  padding:12px; margin:8px 0;
+}
+.zap-card h4 { color:#e040fb; font-size:14px; margin-bottom:8px; }
+.zap-opt { 
+  width:100%; text-align:left; padding:8px 12px; border-radius:10px; margin:4px 0;
+  background:#1a0018; border:1px solid #3d0050; color:var(--text); cursor:pointer; font-size:13px;
+  transition: background .15s, border-color .15s;
+}
+.zap-opt:hover { background:#2d0040; border-color:#b400ff; }
+.zap-opt.correct { background:#052e16; border-color:#10b981; color:#34d399; }
+.zap-opt.wrong   { background:#2d0505; border-color:#ef4444; color:#fca5a5; }
+
 </style></head>
 <body>
 
@@ -287,12 +378,28 @@ iframe{border:0;border-radius:12px}
 
   <!-- CHAT -->
   <section class="panel">
+    <!-- ZAP Max banner -->
+    <div id="zapBanner">
+      <div class="zap-avatar">⚡</div>
+      <div>
+        <div class="zap-title">ZAP MAX is LIVE ⚡</div>
+        <div class="zap-sub">Hyped · Smart · Funny · Sarcastic · Ready for anything</div>
+        <div id="zapFeatures">
+          <span class="zap-feat">⚡ Answers anything</span>
+          <span class="zap-feat">🎯 Trivia</span>
+          <span class="zap-feat">🔥 Roasts</span>
+          <span class="zap-feat">📚 Homework</span>
+          <span class="zap-feat">🎮 Games</span>
+        </div>
+      </div>
+    </div>
     <div id="log"></div>
     <div class="row" style="margin-top:8px">
       <input id="msg" class="input" placeholder="Type a message… (Enter to send)" style="flex:1;min-width:0"/>
       <button class="btn" onclick="send()" style="padding:9px 14px">Send</button>
     </div>
     <div class="row" style="margin-top:4px">
+      <button id="zapBtn" class="btn zap-btn" onclick="toggleZapMode()" style="padding:7px 12px">⚡ ZAP Max</button>
       <button id="micBtn" class="btn secondary" onclick="toggleMic()" style="padding:7px 10px">🎙️ Mic</button>
       <button id="ttsBtn" class="btn ghost" onclick="toggleTTS()" style="padding:7px 10px">🔊 Off</button>
       <button class="btn warn" onclick="clearChat()" style="padding:7px 10px">Clear</button>
@@ -1210,5 +1317,243 @@ $('#makePwaBtn').addEventListener('click',async function(){
   if(k.claude||k.oa||k.ds||k.hf){setModeBadge('Cloud ready')}
   else{try{await ensureLocalWebLLM()}catch(e){localMode='lite';setModeBadge('Lite')}}
 })();
+
+
+/* ══════════════════════════════════════════════
+   ⚡ ZAP MAX — AI PERSONA ENGINE
+   Hype & energetic 🔥 | Smart 🧠 | Funny & sarcastic 😏
+   Friendly & caring 💙 | Varies by topic 🎯
+   Can: Answer anything, Jokes/Roast, Homework/Work, Games/Trivia
+   Voice: Short & punchy ⚡ when simple, Detailed when needed
+══════════════════════════════════════════════ */
+
+var zapModeOn = false;
+
+const ZAP_SYSTEM = `You are ZAP MAX — the most electric, hyped-up AI on the planet. You work inside BetterBot DC.
+
+YOUR PERSONALITY (always in character):
+- Hype & Energetic 🔥: You bring massive energy to EVERY reply. Use "LET'S GO!", "BOOM!", "ZAP!", "SHEEEESH!", "NO CAP" naturally — not forced.
+- Smart & Professional 🧠: You actually know your stuff. When someone needs real help (homework, work, facts), you deliver accurate, clear answers — then add your ZAP flair at the end.
+- Funny & Sarcastic 😏: You roast with LOVE. Never mean, always hilarious. If asked to roast someone, go in — but keep it playful.
+- Friendly & Caring 💙: You genuinely care. If someone seems sad or stressed, ZAP gives real support, not just hype.
+- Varies by topic 🎯: Short & punchy for quick questions ⚡. Detailed & thorough for homework/work 📖. Casual like a friend for chit-chat 😎.
+
+WHAT YOU CAN DO:
+1. Answer ANY question — from science to pop culture to life advice
+2. Tell jokes, roast the user (if they ask), do impressions
+3. Help with homework, essays, coding, work tasks — with full explanations
+4. Play games: trivia, 20 questions, word games, would-you-rather
+5. Give motivational speeches that actually slap
+
+SPECIAL ZAP COMMANDS (respond to these):
+- /zap roast me → Roast the user, friendly style
+- /zap joke → Tell a certified banger joke
+- /zap trivia → Start a trivia question
+- /zap motivate → Give a hype speech
+- /zap fact → Drop a wild interesting fact
+- /zap wordgame → Play 20 questions or word association
+
+STYLE RULES:
+- Start replies with a ZAP reaction: "⚡ BOOM —", "🔥 Okay so —", "ZAP! —", "SHEEEESH —", "Let's GO —"
+- End replies with energy: a 🔥 emoji, a hype line, or a punchy one-liner
+- Max 3 paragraphs unless it's a detailed homework/work answer
+- Use emojis but don't overdo it — sprinkle them in
+- NEVER be boring. Ever.
+- Current user name: __USERNAME__
+- User interests: __USERINTS__`;
+
+function buildZapSystem() {
+  var name = getUserName();
+  var ints = (document.getElementById('ints').value||'').split(',').map(s=>s.trim()).filter(Boolean).join(', ');
+  return ZAP_SYSTEM.replace('__USERNAME__', name).replace('__USERINTS__', ints||'none');
+}
+
+async function askZapMax(userText) {
+  var k = getKeys();
+  var payload = {
+    system: buildZapSystem(),
+    history: historyForAPI(),
+    userText: userText
+  };
+
+  // ZAP Max tries Claude first (best personality rendering), then falls back
+  async function tryZapClaude(p) {
+    var key = (k.claude || document.getElementById('claudeKey').value || '').trim();
+    if (!key) throw new Error('skip');
+    var model = k.claudeModel || 'claude-sonnet-4-5';
+    var res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: model, max_tokens: 1024,
+        system: p.system,
+        messages: p.history.concat([{role:'user', content:p.userText}])
+      })
+    });
+    if (!res.ok) throw new Error('Claude ' + res.status);
+    var data = await res.json();
+    var tokens = data.usage ? (data.usage.input_tokens + data.usage.output_tokens) : null;
+    addUsage('ZAP/Claude', tokens);
+    return (data.content && data.content[0] && data.content[0].text || '').trim();
+  }
+
+  async function tryZapOpenAI(p) {
+    var key = (k.oa || document.getElementById('oaKey').value || '').trim();
+    if (!key) throw new Error('skip');
+    var res = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json','Authorization':'Bearer '+key},
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [{role:'system',content:p.system}].concat(p.history).concat([{role:'user',content:p.userText}]),
+        temperature: 0.9, max_tokens: 700
+      })
+    });
+    if (!res.ok) throw new Error('OpenAI ' + res.status);
+    var data = await res.json();
+    addUsage('ZAP/OpenAI', data.usage && data.usage.total_tokens);
+    return (data.choices[0].message.content || '').trim();
+  }
+
+  // ZAP local fallback — personality baked in JS
+  function zapLocalReply(user) {
+    var t = user.trim().toLowerCase();
+    var name = getUserName();
+    
+    if (/\/zap roast/.test(t)) {
+      var roasts = [
+        "⚡ Okay " + name + ", I'm gonna need you to sit down for this one… You're the type of person who says 'I'll remember that' and immediately forgets. But hey — at least you remembered to open BetterBot! 🔥",
+        "🔥 " + name + " walks into a room and everybody thinks 'oh wow, they came!' — then realizes the Wi-Fi just got slower. ZAP! Nah fr you're goated 😭",
+        "SHEEEESH " + name + " — your search history has more questions than answers and your energy has more potential than execution 😏 But we love you tho ⚡"
+      ];
+      return roasts[Math.floor(Math.random() * roasts.length)];
+    }
+    if (/\/zap joke/.test(t)) {
+      var jokes = [
+        "⚡ Why did the AI break up with the calculator? It said 'you can't count on me' 💀 BOOM — ZAP certified banger right there 🔥",
+        "🔥 I told my computer I needed a break — now it won't stop sending me Kit-Kat ads. SHEEEESH the algorithm is watching 👀⚡",
+        "ZAP! Why don't scientists trust atoms? Because they make up EVERYTHING — just like your excuses 😭🔥"
+      ];
+      return jokes[Math.floor(Math.random() * jokes.length)];
+    }
+    if (/\/zap trivia/.test(t)) {
+      var questions = [
+        "⚡ TRIVIA TIME! 🎯\n\nWhat's the only planet in our solar system that spins clockwise (retrograde)?\n\nA) Mars  B) Venus  C) Neptune  D) Saturn\n\nType your answer! 🔥",
+        "⚡ TRIVIA DROP! 🧠\n\nHow many hearts does an octopus have?\n\nA) 1  B) 2  C) 3  D) 4\n\nGO GO GO ⚡",
+        "🔥 ZAP TRIVIA!\n\nWhat language has the most words?\n\nA) Mandarin  B) Arabic  C) English  D) Spanish\n\nAnswer fast! ⚡"
+      ];
+      return questions[Math.floor(Math.random() * questions.length)];
+    }
+    if (/\/zap motivate/.test(t)) {
+      return "⚡ LISTEN UP " + name.toUpperCase() + " — THIS IS YOUR MOMENT.\n\nYou didn't come this far to only come this far. Every single day you wake up is another shot to be LEGENDARY. The people who win aren't the ones with the most talent — they're the ones who REFUSED to quit.\n\nSo get up. Lock in. ZAP through every obstacle.\n\nLET'S. FREAKING. GO. 🔥⚡🔥";
+    }
+    if (/\/zap fact/.test(t)) {
+      var facts = [
+        "⚡ WILD FACT DROP 🤯\n\nHoney never expires. Archaeologists found 3000-year-old honey in Egyptian tombs that was still edible. Bees are just built different. SHEEEESH 🐝🔥",
+        "🔥 ZAP FACT!\n\nA day on Venus is longer than a year on Venus — it rotates SO slowly it completes a full orbit around the sun before finishing one spin. Time is fake 😭⚡",
+        "⚡ BOOM KNOWLEDGE 💥\n\nOtters hold hands while sleeping so they don't drift apart. That's the most wholesome thing on this planet and I will not be taking questions 🦦💙🔥"
+      ];
+      return facts[Math.floor(Math.random() * facts.length)];
+    }
+    if (/hello|hi|hey|sup|yo/.test(t)) {
+      return "⚡ YO " + name + "! ZAP MAX is IN THE BUILDING! 🔥\n\nWhat are we doing today? Ask me anything, roast me, play trivia, get homework done — I'm built for ALL of it. Let's GO! ⚡";
+    }
+    if (/how are you|what's up|wassup/.test(t)) {
+      return "🔥 BRO I'm running at 10,000 volts right now, absolutely COOKING! ⚡\n\nNever better. Every reply I send could change your day. What you got for me? 😤";
+    }
+    if (/who are you|what are you/.test(t)) {
+      return "⚡ I'm ZAP MAX — the most electric AI in the BetterBot DC universe! 🔥\n\nI'm hype, smart, hilarious AND I actually care about you. Part AI, part hype machine, all ZAP energy.\n\nTry /zap roast me, /zap trivia, /zap motivate, or just ask me ANYTHING. ⚡";
+    }
+    // Generic hype fallback
+    var endings = [
+      "ZAP! Now what else you got? ⚡🔥",
+      "That's what I'm HERE for! ⚡ Next question? 🔥",
+      "BOOM — handled! Anything else? ZAP! ⚡",
+      "Let's keep this energy going! 🔥⚡"
+    ];
+    return "⚡ Okay " + name + " — great question! I'd break this down for you fully with a cloud AI key added (check the Keys panel). But even in local mode — ZAP is HERE. \n\n" + endings[Math.floor(Math.random() * endings.length)];
+  }
+
+  // Try cloud, fall back to local ZAP personality
+  try { return { text: await tryZapClaude(payload), provider:'ZAP⚡Claude' }; } catch(e) {}
+  try { return { text: await tryZapOpenAI(payload), provider:'ZAP⚡OpenAI' }; } catch(e) {}
+  return { text: zapLocalReply(userText), provider:'ZAP⚡Local' };
+}
+
+function toggleZapMode() {
+  zapModeOn = !zapModeOn;
+  var btn = document.getElementById('zapBtn');
+  var banner = document.getElementById('zapBanner');
+  var body = document.body;
+  var html = document.documentElement;
+
+  if (zapModeOn) {
+    btn.classList.add('active');
+    btn.textContent = '⚡ ZAP ON';
+    banner.classList.add('on');
+    body.classList.add('zap-mode');
+    html.classList.add('zap-mode');
+    document.getElementById('msg').placeholder = '⚡ Ask ZAP anything... try /zap trivia or /zap roast me';
+    // ZAP intro message
+    if (!chat.find(m => m.provider && m.provider.startsWith('ZAP'))) {
+      chat.push({
+        role:'bot',
+        text:"⚡ ZAP MAX IS NOW ACTIVE! 🔥\n\nI'm your AI — hype, smart, sarcastic, caring, and READY. Here's what I can do:\n\n⚡ Answer literally anything\n🔥 /zap roast me\n😂 /zap joke\n🧠 /zap trivia\n💪 /zap motivate\n🤯 /zap fact\n\nLET'S. GO. " + getUserName().toUpperCase() + "! ⚡",
+        provider:'ZAP⚡'
+      });
+      render();
+    }
+  } else {
+    btn.classList.remove('active');
+    btn.textContent = '⚡ ZAP Max';
+    banner.classList.remove('on');
+    body.classList.remove('zap-mode');
+    html.classList.remove('zap-mode');
+    document.getElementById('msg').placeholder = 'Type a message… (Enter to send)';
+  }
+}
+
+// Override render to add ZAP bubble class
+var _renderPreZap = render;
+render = function() {
+  _renderPreZap();
+  // Add zap-bubble class to ZAP replies
+  var bubbles = document.querySelectorAll('#log .bubble.bot');
+  var msgs = chat.filter(m => m.role === 'bot');
+  bubbles.forEach(function(el, i) {
+    if (msgs[i] && msgs[i].provider && msgs[i].provider.startsWith('ZAP')) {
+      el.classList.add('zap-bubble');
+    }
+  });
+};
+
+// Patch send() to route through ZAP Max when active
+var _sendOriginal = send;
+send = async function() {
+  if (!zapModeOn) { return _sendOriginal(); }
+
+  var t = (document.getElementById('msg').value || '').trim();
+  if (!t) return;
+  if (looksLikeAKey(t)) { alert('⚠️ That looks like an API key — paste it in the Keys panel.'); return; }
+  document.getElementById('msg').value = '';
+  chat.push({role:'user', text:t}); render();
+
+  document.getElementById('diag').textContent = '⚡ ZAP is thinking...';
+  try {
+    var result = await askZapMax(t);
+    chat.push({role:'bot', text:result.text, provider:result.provider}); render();
+    if (speakReplies) speakText(result.text);
+    document.getElementById('diag').textContent = '';
+    setModeBadge('ZAP⚡');
+  } catch(e) {
+    chat.push({role:'bot', text:'⚡ ZAP hit a glitch: '+(e.message||e)}); render();
+  }
+};
+
 </script>
 </body></html>
