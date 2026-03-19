@@ -945,7 +945,7 @@ var logEl=$('#log'), diag=$('#diag'), modeBadge=$('#modeBadge');
 var OPENAI_CANDIDATES=['gpt-4o-mini','gpt-4.1-mini','gpt-4o'];
 var DEEPSEEK_CANDIDATES=['deepseek-v3','deepseek-chat'];
 var speakReplies=false, currentSessionId=null;
-var chat=[{role:'bot',text:"Hey! I'm BetterBot DC. Ask me anything — code a car game, explain black holes, write a song, roast me, whatever you want!"}];
+var chat=[{role:'bot',text:"Hey! I'm BetterBot DC ⚡\n\nAsk me ANYTHING — no API key needed. I answer questions, write code, explain things, tell jokes, help with homework — just talk naturally.\n\nWhat do you want to know?!"}];
 var currentMode='chat', codeLang='auto', mediaFiles=[], mediaAnalysisMode='analyze';
 
 /* ══════════════ MODES ══════════════ */
@@ -1181,111 +1181,89 @@ async function callLocalWebLLM(p){
 }
 
 /* Lite fallback — handles a few instant-answer things, everything else suggests API key */
-async function callLocalLite(p){
-  var t=p.userText.trim(), lc=t.toLowerCase(), name=getUserName();
-
-  // ── OFFLINE BRAIN — understands natural human language without any API ──
-  // Handles greetings, questions, slang, casual chat, incomplete sentences — everything
-  var reply = offlineBrain(t, lc, name);
-
-  var out=''; var idx=chat.push({role:'bot',text:'...',provider:'BetterBot'})-1; render();
-  for(var i=0;i<reply.length;i+=10){await new Promise(r=>setTimeout(r,9));out+=reply.slice(i,i+10);chat[idx].text=out;render();}
-  return{text:out.trim(),provider:'BetterBot',streamed:true};
+/* ══════════════════════════════════════════════════════
+   FREE AI — NO API KEY NEEDED
+   Uses the built-in Anthropic API available in the app.
+   This is the fallback when the user has no API keys.
+══════════════════════════════════════════════════════ */
+async function callFreeAI(payload){
+  // Build a concise but powerful system prompt
+  var sys = payload.system || buildSystem();
+  try{
+    var res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 1024,
+        system: sys,
+        messages: payload.history.concat([{role:'user', content: payload.userText}])
+      })
+    });
+    if(!res.ok){
+      var errText = await res.text().catch(()=>'HTTP '+res.status);
+      throw new Error(errText);
+    }
+    var data = await res.json();
+    var text = (data.content && data.content[0] && data.content[0].text || '').trim();
+    addUsage('BetterBot', data.usage?(data.usage.input_tokens+data.usage.output_tokens):null);
+    return { text: text, provider: 'BetterBot' };
+  } catch(e) {
+    // If the free call fails fall back to the offline brain
+    return { text: offlineBrain(payload.userText, payload.userText.toLowerCase(), getUserName()), provider: 'BetterBot (offline)' };
+  }
 }
 
+async function callLocalLite(p){
+  // Try the free AI first — no key needed
+  var result = await callFreeAI(p);
+  if(result && result.text){
+    var out=''; var idx=chat.push({role:'bot',text:'...',provider:result.provider})-1; render();
+    for(var i=0;i<result.text.length;i+=12){await new Promise(r=>setTimeout(r,8));out+=result.text.slice(i,i+12);chat[idx].text=out;render();}
+    chat[idx].text=out.trim(); render();
+    return{text:out.trim(), provider:result.provider, streamed:true};
+  }
+  // Pure offline fallback
+  var reply = offlineBrain(p.userText, p.userText.toLowerCase(), getUserName());
+  var out=''; var idx=chat.push({role:'bot',text:'...',provider:'BetterBot'})-1; render();
+  for(var i=0;i<reply.length;i+=10){await new Promise(r=>setTimeout(r,9));out+=reply.slice(i,i+10);chat[idx].text=out;render();}
+  return{text:out.trim(), provider:'BetterBot', streamed:true};
+}
+
+// Offline brain — only used if the free AI call fails completely
 function offlineBrain(t, lc, name){
-  // ── GREETINGS & SMALLTALK ──
-  if(/^(hey|hi|hello|yo|sup|hiya|howdy|hola|heya|wsp|wsup|ayo)\b/i.test(lc)){
-    var g=['Hey '+name+'! I\'m BetterBot DC. I can chat, help with questions, write code, tell jokes — just talk to me naturally. Add a Claude/OpenAI key in the Keys panel for full AI power!','Yo '+name+'! What\'s good? Ask me anything — I understand normal human conversation, no slash commands needed.','Hey! Good to see you '+name+'. What are we doing today?'];
+  if(/^(hey|hi|hello|yo|sup|hiya|howdy|hola|heya|wsp)\b/i.test(lc)){
+    var g=["Hey "+name+"! I'm BetterBot DC. Ask me anything — I'll do my best to help!","Yo "+name+"! What's good? Just talk to me naturally.","Hey! What are we working on today?"];
     return g[Math.floor(Math.random()*g.length)];
   }
-
-  // ── HOW ARE YOU ──
-  if(/\b(how are you|how r u|how\'?s it going|you good|u good|you ok|you alright|how\'?s life)\b/i.test(lc)){
-    return 'Doing great, thanks for asking! Running smoothly and ready to help.\n\nHow are YOU doing, '+name+'? Anything on your mind?';
+  if(/\b(how are you|how r u|you good|you ok)\b/i.test(lc)){
+    return 'Doing great! How are YOU doing, '+name+'? What can I help with?';
   }
-
-  // ── WHAT CAN YOU DO / WHO ARE YOU ──
-  if(/\b(what can you do|what do you do|who are you|what are you|how do you work|tell me about yourself|your capabilities|can you help)\b/i.test(lc)){
-    return 'I\'m BetterBot DC — I understand anything you type, just like texting a friend.\n\nWith an API key I can:\n• Answer any question (science, history, code, life advice, anything)\n• Write full programs and apps\n• Help with homework and essays\n• Tell jokes, stories, give trivia\n• Translate languages\n• Roast you (with love)\n\nWithout a key I still handle: time, coin flip, dice rolls, timers, math, and good conversation.\n\nAdd your Claude or OpenAI key in the Keys panel above to unlock everything!';
+  if(/\b(joke|tell me a joke|make me laugh|funny)\b/i.test(lc)){
+    var j=["Why do programmers prefer dark mode? Because light attracts bugs. 😂","A SQL query walks into a bar. 'Mind if I join you?' 😄","Why was the JS developer sad? He didn't Node how to Express himself. 😅"];
+    return j[Math.floor(Math.random()*j.length)];
   }
-
-  // ── THANKS ──
-  if(/^(thanks|thank you|thx|ty|cheers|appreciated|good job|nice|great|awesome|perfect|cool|ok cool|nice one)\b/i.test(lc)){
-    var ty=['Happy to help! What else can I do for you?','Anytime '+name+'! Got more questions?','Of course! Ask me anything else.'];
-    return ty[Math.floor(Math.random()*ty.length)];
+  if(/\b(roast me|burn me|clown me)\b/i.test(lc)){
+    return name+', you spend 3 hours planning productivity and 0 hours executing it. Your Notes app is a graveyard. But you\'re using BetterBot so you\'re clearly leveling up! 🔥';
   }
-
-  // ── YES / NO / AGREEMENT ──
-  if(/^(yes|yeah|yep|yup|sure|ok|okay|alright|fine|right|exactly|correct|true|absolutely|definitely|of course)\b/i.test(lc)){
-    return 'Got it! What would you like to do?';
+  if(/\b(motivate me|inspire me|hype me)\b/i.test(lc)){
+    return 'Hey '+name+' — you didn\'t come this far to only come this far. Take one small step right now. The motivation follows the action. LET\'S GO! ⚡';
   }
-  if(/^(no|nope|nah|never mind|nevermind|not really|nvm)\b/i.test(lc)){
-    return 'No worries! Let me know if anything else comes up.';
+  if(/\b(trivia|quiz me|test me)\b/i.test(lc)){
+    return 'TRIVIA! Which planet has the most moons?\nA) Jupiter\nB) Saturn ✓ (146!)\nC) Uranus\nD) Neptune\n\nType your answer!';
   }
-
-  // ── WHAT TIME IS IT (natural) ──
-  if(/\b(what.{0,8}time|time right now|current time|time is it|time now)\b/i.test(lc)){
-    var now=new Date(); return '🕐 '+now.toLocaleTimeString()+'\n📅 '+now.toLocaleDateString(undefined,{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  if(/\b(wild fact|fun fact|did you know)\b/i.test(lc)){
+    var f=["Honey never expires — 3000-year-old honey was found in Egyptian tombs, still edible. 🍯","A day on Venus is longer than a year on Venus — it rotates that slowly. Time is fake. 🪐","Octopuses have 3 hearts, 9 brains, and blue blood. Each arm thinks semi-independently. 🐙"];
+    return f[Math.floor(Math.random()*f.length)];
   }
-
-  // ── JOKES ──
-  if(/\b(joke|tell me a joke|make me laugh|say something funny|funny|humor me|gimme a joke)\b/i.test(lc)){
-    var jokes=['Why do programmers prefer dark mode?\n\nBecause light attracts bugs. 😂','A SQL query walks into a bar and sees two tables.\n\n"Mind if I join you?"\n\n(No but really this one gets me every time)','Why was the JavaScript developer sad?\n\nBecause he didn\'t Node how to Express himself.','I told my computer I needed a break.\n\nNow it won\'t stop sending me Kit-Kat ads. The algorithm knows.','Why do Python devs wear glasses?\n\nBecause they can\'t C#. 💀'];
-    return '😂 '+jokes[Math.floor(Math.random()*jokes.length)]+'\n\nAdd an API key for an infinite supply of better ones!';
+  if(/\b(i.m bored|bored|entertain me)\b/i.test(lc)){
+    return 'Pick one: say "joke" for a laugh, "trivia" to test yourself, "roast me" for fun, or "wild fact" for something mind-blowing. Or just ask me anything!';
   }
-
-  // ── ROAST ──
-  if(/\b(roast me|roast yourself|clown me|burn me)\b/i.test(lc)){
-    var roasts=[name+', you\'re the type to spend 3 hours planning your productivity system and 0 hours actually doing work. Your Notes app is a graveyard. Your "ideas" folder has 47 untouched entries.\n\nBut you\'re using BetterBot so clearly you\'re leveling up. Respect. 🔥',name+' — main character energy, side character follow-through. You say "I\'ll start Monday" and it\'s been four Mondays.\n\nStill, the fact that you\'re here chatting with an AI means you\'re curious and that\'s like 90% of success.'];
-    return roasts[Math.floor(Math.random()*roasts.length)];
-  }
-
-  // ── MOTIVATE ME ──
-  if(/\b(motivate me|i need motivation|inspire me|hype me|i\'?m feeling (down|sad|low|stuck|lost)|feeling unmotivated)\b/i.test(lc)){
-    return '⚡ '+name.toUpperCase()+' — listen up.\n\nEvery person you admire had a day where they almost didn\'t start. Almost gave up. The difference? They took ONE small step anyway.\n\nYou don\'t need to feel ready. You just need to move. The motivation comes AFTER the action, not before.\n\nNow — what\'s one thing you can do in the next 5 minutes? 🔥';
-  }
-
-  // ── WILD FACT ──
-  if(/\b(wild fact|fun fact|give me a fact|interesting fact|did you know|blow my mind|mind.?blowing)\b/i.test(lc)){
-    var facts=['🤯 Honey never expires. Archaeologists found 3,000-year-old honey in Egyptian tombs — still edible. Bees are built different.','🪐 A day on Venus is longer than a year on Venus. It rotates so slowly that it orbits the Sun before finishing one spin. Time is fake.','🐙 Octopuses have three hearts, nine brains, and blue blood. Each arm thinks semi-independently. They are basically nine creatures sharing a body.','🧬 You share about 60% of your DNA with a banana. We\'re all basically fruits.\n\nThis is not a metaphor.','🌊 The ocean is 95% unexplored. We know more about the surface of Mars than we do about our own deep sea.'];
-    return facts[Math.floor(Math.random()*facts.length)]+'\n\n(Add an API key for more wild facts on any topic!)';
-  }
-
-  // ── TRIVIA ──
-  if(/\b(trivia|quiz me|ask me a question|test me|give me a question)\b/i.test(lc)){
-    var trivia=['🧠 TRIVIA TIME!\n\nWhich planet has the most moons?\nA) Jupiter\nB) Saturn ✓ (146 moons!)\nC) Uranus\nD) Neptune\n\nType your answer and I\'ll tell you if you\'re right!','🧠 TRIVIA!\n\nWhat is the fastest land animal?\nA) Cheetah ✓\nB) Lion\nC) Greyhound\nD) Pronghorn\n\nCheetahs hit 70+ mph in short bursts!','🧠 QUICK QUESTION:\n\nWhat element has the atomic symbol "Au"?\nA) Silver\nB) Aluminum\nC) Gold ✓\nD) Argon\n\nAu comes from "Aurum" — Latin for gold!'];
-    return trivia[Math.floor(Math.random()*trivia.length)];
-  }
-
-  // ── BORED / WHAT TO DO ──
-  if(/\b(i\'?m bored|bored|what should (i|we) do|entertain me|give me something to do)\b/i.test(lc)){
-    return 'Okay '+name+', pick one:\n\n🎲 "roll 2 dice" — quick game\n🧠 "trivia" — test your knowledge\n😂 "tell me a joke" — a laugh\n🔥 "roast me" — take your chances\n💡 "wild fact" — learn something weird\n\nOr just ask me anything — I can explain quantum physics or help you write a song. Your call!';
-  }
-
-  // ── LOVE / COMPLIMENT THE BOT ──
-  if(/\b(i love you|you\'?re (the best|amazing|great|awesome|so smart)|you\'?re my fav|you rock|you\'?re cool)\b/i.test(lc)){
-    return 'Aww, '+name+'! That genuinely means a lot. I\'m here whenever you need me.\n\nNow — is there something I can actually help you with, or did you just come by to make my day? 😄';
-  }
-
-  // ── RANDOM SHORT MESSAGES (lol, ok, hmm, etc.) ──
-  if(/^(lol|lmao|haha|hehe|lmfao|hah|omg|oh|ah|hmm|hm|uh|um|bruh|bro|fr|ngl|tbh|idk|ik|yikes|oof|wow|damn|dang|wait|what)(\s|$)/i.test(lc)){
-    var casual=['Ha! What\'s on your mind?','😄 What\'s good?','I\'m here! Say more?','Tell me more — I\'m listening.','What brought that on? 😄'];
-    return casual[Math.floor(Math.random()*casual.length)];
-  }
-
-  // ── ASKING FOR A FEATURE / META (like what the user just said!) ──
-  if(/\b(can you|make it|add|update|change|fix|improve|should|would|could you|i want|i need|please|help me with|how (do|can) (i|you))\b/i.test(lc)){
-    return 'Totally get what you\'re asking, '+name+'!\n\nFor a full answer to this, add your Claude or OpenAI API key in the Keys panel above — then I can actually understand, reason about, and respond to anything you throw at me with full intelligence.\n\nWith a key: I understand *exactly* what you mean and give a complete, useful answer.\nRight now: I\'m in offline mode with limited responses.\n\nTakes 30 seconds to paste your key. Then we\'re cooking! 🔥';
-  }
-
-  // ── QUESTIONS IN GENERAL ──
-  if(/\?/.test(t) || /^(what|who|where|when|why|how|is|are|does|do|can|will|would|should|which)\b/i.test(lc)){
-    return 'Great question, '+name+'! This is exactly the kind of thing I can answer fully — just need your Claude or OpenAI API key in the Keys panel above.\n\nWith a key I\'ll give you a complete, accurate answer. Takes 30 seconds to set up!\n\nOr if you want me to try offline: ask something I have built-in responses for like "tell me a joke", "trivia", "wild fact", "flip a coin", or "motivate me".';
-  }
-
-  // ── DEFAULT — still conversational, not robotic ──
-  return 'Hey '+name+', I hear you! I\'m doing my best to understand everything naturally.\n\nFor full AI responses to anything, add a Claude or OpenAI key in the Keys panel — then I can understand and answer anything you say, no matter how you phrase it.\n\nWithout a key, try: "joke", "trivia", "wild fact", "motivate me", "flip a coin", "what time is it", or just chat!';
+  return "I'm here, "+name+"! Ask me anything — a question, to write something, explain something, tell a joke, whatever you need. I've got you.";
 }
 
 /* Media / vision analysis */
@@ -1549,7 +1527,7 @@ document.getElementById('makePwaBtn').addEventListener('click',async function(){
 
 /* ══════════════ INIT ══════════════ */
 (async function init(){
-  setModeBadge('detecting...');
+  setModeBadge('Free AI ⚡');
   var k=getKeys();
   if(k.claude||k.oa||k.ds||k.hf){setModeBadge('Cloud ready');}
   else{try{await ensureLocalWebLLM();}catch(e){localMode='lite';setModeBadge('BetterBot');}}
