@@ -1,0 +1,12 @@
+.DS_Store
+dist/
+**/xcuserdata/
+**/.gradle/
+**/build/
+**/bin/
+**/obj/
+**/local.properties
+*.keystore
+*.jks
+.env
+.env.*

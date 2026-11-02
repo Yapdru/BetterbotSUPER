@@ -1,0 +1,61 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Wave Surfer 3D</title>
+<style>html,body{margin:0;height:100%;overflow:hidden;background:#0b1d3a;font-family:-apple-system,system-ui,sans-serif}
+canvas{display:block;width:100vw;height:100vh}
+#hud{position:fixed;top:14px;left:16px;color:#fff;font-weight:700;font-size:18px;text-shadow:0 2px 8px #000}
+#msg{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;text-align:center;font-size:20px;text-shadow:0 2px 10px #000;pointer-events:none}
+</style></head><body>
+<canvas id="c"></canvas>
+<div id="hud">Score 0 · Best 0</div>
+<div id="msg">Tap or press Space to start<br><small>← → or swipe to steer · collect 🟡 rings, dodge 🪨 rocks</small></div>
+<script>
+const cv=document.getElementById('c'),ctx=cv.getContext('2d');
+let W,H;function resize(){W=cv.width=innerWidth*devicePixelRatio;H=cv.height=innerHeight*devicePixelRatio;}
+addEventListener('resize',resize);resize();
+const hud=document.getElementById('hud'),msg=document.getElementById('msg');
+let best=+localStorage.getItem('surfBest')||0;
+let state='menu',score=0,speed=0.02,playerX=0,targetX=0,t=0,objs=[];
+const horizon=0.42,camH=1.0;
+// project a world point (x across, z distance) to screen
+function proj(x,z){const s=1/(z+0.2);return{x:W/2+x*s*H*0.55*devicePixelRatio/devicePixelRatio,y:H*horizon+camH*s*H*0.9,s};}
+function spawn(){objs.push({x:(Math.random()*2-1)*1.2,z:6,type:Math.random()<0.35?'rock':'ring',hit:false});}
+function reset(){score=0;speed=0.02;playerX=0;targetX=0;objs=[];state='play';msg.style.display='none';}
+function over(){state='over';if(score>best){best=score;localStorage.setItem('surfBest',best);}
+  msg.style.display='flex';msg.innerHTML='Wipeout! Score '+score+'<br>Tap or Space to ride again';}
+function input(dir){targetX=Math.max(-1,Math.min(1,targetX+dir*0.5));}
+addEventListener('keydown',e=>{if(e.code==='Space'){if(state!=='play')reset();}
+  if(e.key==='ArrowLeft')input(-1);if(e.key==='ArrowRight')input(1);});
+let sx=null;addEventListener('touchstart',e=>{sx=e.touches[0].clientX;if(state!=='play')reset();});
+addEventListener('touchend',e=>{if(sx===null)return;const dx=e.changedTouches[0].clientX-sx;if(Math.abs(dx)>30)input(dx>0?1:-1);sx=null;});
+addEventListener('mousedown',()=>{if(state!=='play')reset();});
+function drawSky(){const g=ctx.createLinearGradient(0,0,0,H*horizon);g.addColorStop(0,'#2b5cff');g.addColorStop(0.6,'#ff8ad8');g.addColorStop(1,'#ffd27a');ctx.fillStyle=g;ctx.fillRect(0,0,W,H*horizon);
+  ctx.fillStyle='#ffe98a';ctx.beginPath();ctx.arc(W*0.5,H*horizon*0.7,H*0.07,0,7);ctx.fill();}
+function drawSea(){const g=ctx.createLinearGradient(0,H*horizon,0,H);g.addColorStop(0,'#1ec8d8');g.addColorStop(1,'#0a4fa8');ctx.fillStyle=g;ctx.fillRect(0,H*horizon,W,H);
+  // scrolling perspective lines = waves
+  ctx.strokeStyle='rgba(255,255,255,.35)';ctx.lineWidth=2*devicePixelRatio;
+  for(let i=0;i<24;i++){const z=((i/24)+t*0.5)%1*12+0.5;const a=proj(-6,z),b=proj(6,z);
+    const wob=Math.sin(t*2+i)*0.08;ctx.globalAlpha=Math.min(1,z/4)*0.6;ctx.beginPath();ctx.moveTo(a.x,a.y+wob*H);
+    for(let k=1;k<=10;k++){const x=-6+k*1.2;const p=proj(x,z);ctx.lineTo(p.x,p.y+Math.sin(x*2+t*3)*4*p.s*H*0.02);}ctx.stroke();}
+  ctx.globalAlpha=1;}
+function drawObj(o){const p=proj(o.x,o.z-0.0);const r=Math.max(4,p.s*H*0.09);
+  if(o.type==='ring'){ctx.strokeStyle='#ffd500';ctx.lineWidth=Math.max(3,r*0.35)*devicePixelRatio;ctx.beginPath();ctx.ellipse(p.x,p.y-r,r,r*1.2,0,0,7);ctx.stroke();ctx.strokeStyle='rgba(255,255,255,.7)';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(p.x,p.y-r,r*0.55,r*0.7,0,0,7);ctx.stroke();}
+  else{const g=ctx.createRadialGradient(p.x-r*0.3,p.y-r*1.2,r*0.1,p.x,p.y-r,r*1.4);g.addColorStop(0,'#c7b9a6');g.addColorStop(1,'#4b3f36');ctx.fillStyle=g;ctx.beginPath();ctx.ellipse(p.x,p.y-r*0.8,r*1.1,r*0.9,0,0,7);ctx.fill();}}
+function drawSurfer(){const x=W/2+playerX*H*0.3,y=H*0.86;const r=H*0.05;
+  ctx.fillStyle='#ff5a7a';ctx.beginPath();ctx.ellipse(x,y,r*1.6,r*0.35,playerX*0.3,0,7);ctx.fill();
+  ctx.fillStyle='#fff3c4';ctx.beginPath();ctx.arc(x,y-r*1.1,r*0.45,0,7);ctx.fill();
+  ctx.fillStyle='#2b5cff';ctx.fillRect(x-r*0.3,y-r*0.7,r*0.6,r*0.9);}
+function update(){t+=0.016;playerX+=(targetX-playerX)*0.15;
+  if(state==='play'){speed=Math.min(0.06,speed+0.00005);score+=0;
+    if(Math.random()<0.03)spawn();
+    for(const o of objs){o.z-=speed*60*0.12;
+      if(!o.hit&&o.z<0.6&&o.z>0.2&&Math.abs(o.x-playerX)<0.22){o.hit=true;
+        if(o.type==='ring'){score+=10;hud.textContent='Score '+score+' · Best '+best;}
+        else{over();return;}}}
+    objs=objs.filter(o=>o.z>0.05);
+    score+=0.05;hud.textContent='Score '+Math.floor(score)+' · Best '+Math.max(best,Math.floor(score));}
+}
+function frame(){update();ctx.clearRect(0,0,W,H);drawSky();drawSea();
+  if(state!=='menu'||true){[...objs].sort((a,b)=>b.z-a.z).forEach(drawObj);}
+  drawSurfer();requestAnimationFrame(frame);}
+hud.textContent='Score 0 · Best '+best;frame();
+</script></body></html>

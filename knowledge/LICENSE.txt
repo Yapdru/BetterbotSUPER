@@ -1,0 +1,1 @@
+Pilot content is from Stack Overflow. Each question and answer retains its original text, contributor name/profile, source URL, and content license in pilot.json. The downloaded pilot records report CC BY-SA 4.0: https://creativecommons.org/licenses/by-sa/4.0/ . Source content is not endorsed by Stack Overflow. Code may be outdated and must be reviewed before execution.
