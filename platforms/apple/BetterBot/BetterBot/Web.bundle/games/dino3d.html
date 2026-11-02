@@ -1,0 +1,171 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Dino Dash 3D</title>
+<style>html,body{margin:0;height:100%;overflow:hidden;font-family:-apple-system,system-ui,sans-serif;background:#9be7ff}
+canvas{display:block}
+#hud{position:fixed;top:14px;left:16px;color:#fff;font-weight:800;font-size:20px;text-shadow:0 2px 8px #0008;pointer-events:none}
+#msg{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;text-align:center;font-size:22px;font-weight:700;text-shadow:0 2px 10px #0008;pointer-events:none}
+</style></head><body>
+<div id="hud"></div>
+<div id="msg">Tap, Space or ↑ to start<br><small>↑/Space jump · ↓ duck</small></div>
+<script src="vendor/three.min.js"></script>
+<script>
+const hud=document.getElementById('hud'),msg=document.getElementById('msg');
+const renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setSize(innerWidth,innerHeight);
+document.body.appendChild(renderer.domElement);
+
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0x9be7ff);
+scene.fog=new THREE.Fog(0x9be7ff,40,120);
+const camera=new THREE.PerspectiveCamera(55,innerWidth/innerHeight,0.1,300);
+camera.position.set(0,5,16);
+camera.lookAt(6,1.5,0);
+scene.add(new THREE.AmbientLight(0xffffff,0.65));
+const sun=new THREE.DirectionalLight(0xffffff,0.9);
+sun.position.set(-6,14,10);scene.add(sun);
+
+const mat=c=>new THREE.MeshStandardMaterial({color:c,flatShading:true});
+
+// Ground and moving stripes
+const ground=new THREE.Mesh(new THREE.BoxGeometry(400,1,40),mat(0xf4d58d));
+ground.position.set(0,-0.5,0);scene.add(ground);
+const stripes=[];
+for(let i=0;i<30;i++){
+  const s=new THREE.Mesh(new THREE.BoxGeometry(1.2,0.05,0.3),mat(0xe1b96a));
+  s.position.set(i*4-20,0.03,-6+(i%3)*2);
+  scene.add(s);stripes.push(s);
+}
+
+// Sun in the sky
+const sunBall=new THREE.Mesh(new THREE.SphereGeometry(4,16,12),mat(0xffd23f));
+sunBall.position.set(-30,22,-80);scene.add(sunBall);
+
+// Dino (built from boxes)
+const dino=new THREE.Group();
+const add=(geo,color,x,y,z)=>{const m=new THREE.Mesh(geo,mat(color));m.position.set(x,y,z);dino.add(m);return m;};
+add(new THREE.BoxGeometry(1.4,1.2,1),0x2ecc71,0,1.5,0);
+add(new THREE.BoxGeometry(0.9,0.8,0.9),0x27ae60,0.8,2.3,0);
+add(new THREE.BoxGeometry(0.22,0.22,0.1),0xffffff,1.2,2.5,0.46);
+add(new THREE.BoxGeometry(0.1,0.1,0.05),0x111111,1.28,2.5,0.52);
+add(new THREE.BoxGeometry(1,0.4,0.4),0xff7f50,-1,1.2,0);
+add(new THREE.BoxGeometry(0.35,0.9,0.35),0xe67e22,-0.3,0.45,0.3);
+add(new THREE.BoxGeometry(0.35,0.9,0.35),0xe67e22,0.3,0.45,-0.3);
+scene.add(dino);
+
+// Obstacles
+const obstacles=[];
+function spawnCactus(){
+  const g=new THREE.Group();
+  const h=2+Math.random()*1.2;
+  const c=new THREE.Mesh(new THREE.BoxGeometry(0.7,h,0.7),mat(0x1e9e5a));
+  c.position.y=h/2;g.add(c);
+  const arm=new THREE.Mesh(new THREE.BoxGeometry(0.5,0.4,0.5),mat(0x1e9e5a));
+  arm.position.set(0.5,h*0.55,0);g.add(arm);
+  g.userData={w:0.9,bottom:0,top:h};
+  g.position.set(60,0,0);scene.add(g);obstacles.push(g);
+}
+function spawnBird(){
+  const g=new THREE.Group();
+  const b=new THREE.Mesh(new THREE.SphereGeometry(0.5,10,8),mat(0xff5e7e));
+  b.scale.set(1.3,0.8,0.8);g.add(b);
+  const w=new THREE.Mesh(new THREE.BoxGeometry(1.2,0.08,0.5),mat(0xffb3c1));
+  w.position.y=0.5;g.add(w);
+  g.userData={w:1.0,bottom:2.0,top:2.9};
+  g.position.set(60,2.45,0);scene.add(g);obstacles.push(g);
+}
+
+// Clouds
+const clouds=[];
+function spawnCloud(){
+  const c=new THREE.Mesh(new THREE.SphereGeometry(2+Math.random()*1.5,10,8),mat(0xffffff));
+  c.position.set(60,9+Math.random()*4,-20-Math.random()*20);
+  scene.add(c);clouds.push(c);
+}
+
+// Game state
+let state='menu',score=0,best=+localStorage.getItem('dino3dBest')||0;
+let speed=0.22,vy=0,y=0,ducking=false,spawnT=60;
+const GRAV=-0.022,JUMP=0.42;
+
+function reset(){
+  state='play';score=0;speed=0.22;vy=0;y=0;ducking=false;spawnT=60;
+  obstacles.forEach(o=>scene.remove(o));obstacles.length=0;
+  msg.style.display='none';
+}
+function over(){
+  state='over';
+  if(Math.floor(score)>best){best=Math.floor(score);localStorage.setItem('dino3dBest',best);}
+  msg.style.display='flex';
+  msg.innerHTML='Game over · '+Math.floor(score)+'<br>Tap, Space or ↑ to retry';
+}
+function jump(){
+  if(state!=='play'){reset();return;}
+  if(y<=0.0001)vy=JUMP;
+}
+addEventListener('keydown',e=>{
+  if(e.code==='Space'||e.key==='ArrowUp'){e.preventDefault();jump();}
+  if(e.key==='ArrowDown')ducking=true;
+});
+addEventListener('keyup',e=>{if(e.key==='ArrowDown')ducking=false;});
+addEventListener('mousedown',jump);
+addEventListener('touchstart',e=>{
+  const yy=e.touches[0].clientY;
+  if(state==='play'&&yy>innerHeight*0.6)ducking=true;else jump();
+},{passive:true});
+addEventListener('touchend',()=>{ducking=false;});
+addEventListener('resize',()=>{
+  camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth,innerHeight);
+});
+
+function step(){
+  if(state!=='play')return;
+  speed=Math.min(0.55,0.22+score*0.0004);
+  score+=0.1;
+  hud.textContent='Score '+Math.floor(score)+' · Best '+Math.max(best,Math.floor(score));
+
+  // Jump physics
+  vy+=GRAV;y+=vy;
+  if(y<0){y=0;vy=0;}
+  dino.position.y=y;
+  dino.scale.y=ducking?0.55:1;
+
+  // Spawn
+  spawnT--;
+  if(spawnT<=0){
+    if(Math.random()<0.25)spawnBird();else spawnCactus();
+    spawnT=Math.max(28,90-score*0.2)*(0.7+Math.random()*0.6);
+  }
+  if(Math.random()<0.01)spawnCloud();
+
+  // Move ground stripes (wrap around)
+  stripes.forEach(s=>{s.position.x-=speed;if(s.position.x<-22)s.position.x+=44;});
+
+  // Move clouds
+  for(let i=clouds.length-1;i>=0;i--){
+    const c=clouds[i];c.position.x-=speed*0.3;
+    if(c.position.x<-70){scene.remove(c);clouds.splice(i,1);}
+  }
+
+  // Move obstacles and check collisions
+  const dBottom=y, dTop=y+(ducking?1.6:2.7);
+  for(let i=obstacles.length-1;i>=0;i--){
+    const o=obstacles[i];
+    o.position.x-=speed;
+    if(o.position.x<-15){scene.remove(o);obstacles.splice(i,1);continue;}
+    const u=o.userData;
+    if(Math.abs(o.position.x)<u.w/2+0.7 && dBottom<u.top && dTop>u.bottom){
+      over();return;
+    }
+  }
+}
+
+function loop(){
+  step();
+  renderer.render(scene,camera);
+  requestAnimationFrame(loop);
+}
+hud.textContent='Best '+best;
+loop();
+</script></body></html>

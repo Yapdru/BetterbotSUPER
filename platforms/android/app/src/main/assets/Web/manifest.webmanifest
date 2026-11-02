@@ -1,0 +1,44 @@
+{
+  "name": "BetterBot DC",
+  "short_name": "BetterBotDC",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f0f4ff",
+  "theme_color": "#0b1022",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "id": "./",
+  "scope": "./",
+  "description": "AI chat, sourced coding lookup, and offline tools.",
+  "display_override": [
+    "standalone",
+    "minimal-ui"
+  ],
+  "categories": [
+    "productivity",
+    "education"
+  ],
+  "lang": "en",
+  "shortcuts": [
+    {
+      "name": "New chat",
+      "short_name": "Chat",
+      "url": "./index.html"
+    },
+    {
+      "name": "Offline games",
+      "short_name": "Games",
+      "url": "./games/dino.html"
+    }
+  ]
+}

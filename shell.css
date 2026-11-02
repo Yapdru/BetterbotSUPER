@@ -1,0 +1,26 @@
+.app-shell{display:grid;grid-template-columns:220px minmax(0,1fr);min-height:100dvh;gap:20px;padding:18px}
+.app-sidebar{position:sticky;top:18px;align-self:start;height:calc(100dvh - 36px);display:flex;flex-direction:column;gap:20px;padding:22px 14px;border:1px solid var(--glass-border);border-radius:26px;background:var(--glass);box-shadow:inset 0 1px 0 #ffffff22,0 20px 70px #00000020;backdrop-filter:blur(26px) saturate(150%);-webkit-backdrop-filter:blur(26px) saturate(150%)}
+.sidebar-brand{font-size:22px;padding:0 10px;letter-spacing:-.04em}.app-sidebar nav{display:flex;flex-direction:column;gap:8px}
+.app-sidebar nav button{border:1px solid transparent;background:transparent;color:var(--secondary);font:inherit;font-size:14px;text-align:left;padding:13px 16px;min-height:48px;border-radius:15px;cursor:pointer}
+.app-sidebar nav button[aria-current="page"]{background:linear-gradient(120deg,#9660ed32,#448ded25);border-color:#b59afa35;color:var(--ink)}
+.sidebar-signin{margin-top:auto!important;width:100%;position:static!important}.sidebar-new{width:100%}
+.app-main{min-width:0}body .app-main .container{max-width:1180px;margin:auto;padding:0 0 24px}
+body .app-main .header{padding:18px 22px;border:1px solid var(--glass-border);border-radius:24px;margin:0 0 20px;background:var(--glass);align-items:center}
+.header>div:first-of-type>strong{display:none}.workspace-title{font-size:23px;font-weight:650;letter-spacing:-.03em}
+.workspace-page[hidden]{display:none!important}.workspace-page{outline:none}.workspace-page>h1{font-size:26px;font-weight:650;margin:12px 0 20px;letter-spacing:-.04em}
+#bbGate[hidden]{display:none!important}
+#blueBtn[hidden]{display:none!important}
+.project-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px}.project-card h2{font-size:18px;font-weight:600;overflow-wrap:anywhere}.project-card p{margin:8px 0 18px}
+.theme-picker{flex-basis:auto;margin:0}.theme-picker button{min-height:36px;padding:6px 14px}
+body.theme-dark{--ink:#f5f5f7;--secondary:#b3b3be;--glass:rgba(22,22,26,.76);--glass-border:#ffffff1c;--surface:#101012;--tint:#b99bff;background:radial-gradient(ellipse at 75% 0%,#26233066,transparent 55%),#050506!important}
+body.satbot{--ink:#f8f4ff;--secondary:#c6badb;--glass:rgba(23,17,42,.58);--glass-border:#ddceff33;--surface:#181029;--tint:#cfb6ff;background:radial-gradient(ellipse at 0% 10%,#54205f,transparent 50%),radial-gradient(ellipse at 85% 15%,#274c78,transparent 52%),radial-gradient(ellipse at 65% 95%,#19483e,transparent 58%),#0b0a18!important}
+body:is(.satbot,.theme-dark) .input,body:is(.satbot,.theme-dark) select,body:is(.satbot,.theme-dark) textarea{background:var(--surface)!important;color:var(--ink)!important;border-color:var(--glass-border)!important}
+body:is(.satbot,.theme-dark) .assistant-tabs button,body:is(.satbot,.theme-dark) .mode-label{color:var(--secondary)!important}
+body:is(.satbot,.theme-dark) .bubble.bot,body:is(.satbot,.theme-dark) #bbCard{background:var(--glass)!important;color:var(--ink)!important;border-color:var(--glass-border)!important}
+body .app-sidebar .btn,body .app-main .btn{border-radius:13px}
+body:is(.theme-dark,.satbot) .auth-tab{color:var(--secondary)!important}
+body:is(.theme-dark,.satbot) .auth-tab.active{color:var(--ink)!important;background:#b69bf025!important;border-color:var(--glass-border)!important}
+body:is(.theme-dark,.satbot) .btn:not(.ghost):not(.warn){background:linear-gradient(120deg,#7353d3,#476fb9)!important;border-color:#bdacff33!important;color:white!important}
+body:is(.theme-dark,.satbot) .btn.ghost{background:var(--glass)!important;color:var(--ink)!important}
+@media(max-width:760px){.app-shell{display:block;padding:max(10px,env(safe-area-inset-top)) 10px 18px}.app-sidebar{height:auto;position:relative;top:0;padding:14px;gap:12px;margin-bottom:14px;border-radius:22px;display:grid;grid-template-columns:1fr auto}.sidebar-brand{font-size:20px;padding:4px}.app-sidebar nav{grid-column:1/-1;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px}.app-sidebar nav button{font-size:12px;padding:10px 4px;text-align:center;min-height:44px}.sidebar-new{grid-row:2;grid-column:1/-1}.sidebar-signin{grid-column:2;grid-row:1;width:auto;padding:8px 15px!important}.app-main .header{gap:10px!important;padding:14px!important}.workspace-title{font-size:20px}.theme-picker{order:5}.project-list{grid-template-columns:1fr}}
+@media(prefers-reduced-transparency:reduce){.app-sidebar,body .panel,body .app-main .header{background:var(--surface)!important;backdrop-filter:none;-webkit-backdrop-filter:none}}
