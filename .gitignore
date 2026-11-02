@@ -10,3 +10,8 @@ dist/
 *.jks
 .env
 .env.*
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+.firebase/
+firebase-debug.log

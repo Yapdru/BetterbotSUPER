@@ -61,6 +61,13 @@ export default {
       const query = (url.searchParams.get('q') || '').trim().toLowerCase();
       if (query.length > 200) return json({error:'Query too long'},400,origin);
       try {
+        if (env.KNOWLEDGE_DB) {
+          const terms=(query.match(/[\p{L}\p{N}_]+/gu)||[]).slice(0,8);
+          const stats=await env.KNOWLEDGE_DB.prepare('SELECT records FROM knowledge_stats WHERE id=1').first();
+          const search=terms.map(term=>'"'+term+'"').join(' AND ');
+          const rows=search ? await env.KNOWLEDGE_DB.prepare('SELECT questions.payload FROM knowledge_fts JOIN questions ON questions.rowid=knowledge_fts.rowid WHERE knowledge_fts MATCH ? ORDER BY rank LIMIT 5').bind(search).all() : {results:[]};
+          return json({library:'Sourced coding library',total:stats?.records||0,results:rows.results.map(row=>JSON.parse(row.payload))},200,origin);
+        }
         const library = await env.CACHE.get('knowledge:pilot:v1', 'json');
         if (!library || !Array.isArray(library.entries)) return json({error:'Library unavailable'},503,origin);
         const terms = query.split(/\s+/).filter(Boolean);

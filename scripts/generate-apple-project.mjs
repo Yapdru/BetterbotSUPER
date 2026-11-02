@@ -5,7 +5,9 @@ const apple=path.join(root,'platforms/apple');
 const directory=path.join(apple,'BetterBotApple.xcodeproj');
 await mkdir(path.join(directory,'xcshareddata/xcschemes'),{recursive:true});
 const decode=s=>s.replace(/<[^>]*>/g,'').replace(/&quot;/g,'"').replace(/&#39;|&apos;/g,"'").replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&').replace(/&#(\d+);/g,(_,n)=>String.fromCodePoint(Number(n)));
-const pilot=JSON.parse(await readFile(path.join(root,'knowledge/pilot.json'),'utf8'));
+let libraryFile=path.join(root,'knowledge/generated/library.json');
+try{await readFile(libraryFile);}catch{libraryFile=path.join(root,'knowledge/pilot.json');}
+const pilot=JSON.parse(await readFile(libraryFile,'utf8'));
 await writeFile(path.join(apple,'Shared/native-library.json'),JSON.stringify(pilot.entries.map(e=>({
   id:e.id,title:decode(e.title),question:decode(e.question.html),answer:decode(e.answer.html),
   author:decode(e.answer.author.display_name),license:e.answer.license,url:e.answer.url,

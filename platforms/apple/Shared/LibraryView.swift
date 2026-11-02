@@ -18,7 +18,7 @@ struct LibraryView: View {
     var body: some View {
         List {
             Section {
-                Text("20 sourced Python questions · available offline").font(.caption).foregroundStyle(.secondary)
+                Text("\(records.count) sourced coding questions · available offline").font(.caption).foregroundStyle(.secondary)
                 TextField("Search questions and answers", text: $query)
                 if !query.isEmpty {
                     Button("Clear search") { query = "" }
@@ -45,10 +45,10 @@ struct LibraryView: View {
                                 .font(.caption).foregroundStyle(.secondary)
                             #if !os(tvOS)
                             if let url = URL(string: record.url) { Link("Original answer and attribution", destination: url) }
-                            if let license = URL(string: "https://creativecommons.org/licenses/by-sa/4.0/") { Link("License", destination: license) }
+                            if let license = URL(string: "https://creativecommons.org/licenses/by-sa/\(record.license.split(separator: " ").last ?? "4.0")/") { Link("License", destination: license) }
                             #else
                             Text(record.url).font(.caption)
-                            Text("creativecommons.org/licenses/by-sa/4.0").font(.caption)
+                            Text(record.license).font(.caption)
                             #endif
                         }.padding()
                     }.focusable().navigationTitle("Coding library")

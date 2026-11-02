@@ -1329,13 +1329,11 @@ var _quizBank=[
 ];
 async function startQuiz(){document.getElementById('quizModal').classList.add('on');_quizScore=0;_quizTotal=0;await nextQuestion();}
 async function nextQuestion(){
+  if(!document.getElementById('quizModal').classList.contains('on')) return;
   _quizAnswered=false;
-  try{
-    var res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:180,messages:[{role:'user',content:'Trivia question. JSON only, no other text: {"q":"question","opts":["A","B","C","D"],"ans":0,"cat":"emoji Topic"} - ans is 0-based index of correct answer.'}]})});
-    if(res.ok){var data=await res.json();var txt=(data.content&&data.content[0]&&data.content[0].text||'').trim();var q=JSON.parse(txt.replace(/```json|```/g,'').trim());if(q.q&&q.opts&&q.opts.length===4){_currentQuiz=q;renderQuiz();return;}}
-  }catch(e){}
   _currentQuiz=_quizBank[Math.floor(Math.random()*_quizBank.length)];renderQuiz();
 }
+
 function renderQuiz(){
   var q=_currentQuiz;var el=document.getElementById('quizContent');
   var scoreEl=document.getElementById('quizScoreDisplay');var totalEl=document.getElementById('quizTotal');var catEl=document.getElementById('quizCat');

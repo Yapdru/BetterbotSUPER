@@ -22,6 +22,7 @@ public partial class MainWindow : Window {
             Browser.Source=new Uri("https://betterbot.local/index.html");
         } catch(Exception) { MessageBox.Show("BetterBot could not start. Check that Microsoft Edge WebView2 Runtime and the bundled Web folder are installed.","BetterBot"); }
     }
+    protected override void OnClosed(EventArgs e) { Browser.Dispose(); base.OnClosed(e); }
     private static void OpenExternal(string value) {
         if(!Uri.TryCreate(value,UriKind.Absolute,out var uri) || (uri.Scheme!="https" && uri.Scheme!="mailto")) return;
         try { Process.Start(new ProcessStartInfo(uri.AbsoluteUri) { UseShellExecute=true }); } catch { MessageBox.Show("Could not open the browser."); }
