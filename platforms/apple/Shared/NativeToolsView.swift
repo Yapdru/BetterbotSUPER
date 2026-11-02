@@ -9,6 +9,7 @@ struct NativeToolsView: View {
                     NavigationLink { FocusView() } label: { Label("Focus timer", systemImage: "timer") }
                     NavigationLink { LibraryView() } label: { Label("Offline coding library", systemImage: "books.vertical") }
                     #if os(iOS)
+                    NavigationLink { DrivingMapView() } label: { Label("Driving map", systemImage: "map") }
                     NavigationLink { HomeView() } label: { Label("Apple Home", systemImage: "house") }
                     #endif
                 }
