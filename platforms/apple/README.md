@@ -9,14 +9,14 @@ Open `BetterBotApple.xcodeproj`. The generated project includes shared schemes a
 | BetterBot, iPhone/iPad | Existing bundled workspace plus an Apple tools sheet with focus, offline coding reader, and Apple Home |
 | BetterBotMac | Existing workspace plus native focus and coding reader |
 | BetterBotVision | Resizable spatial window with translucent glass background, workspace and native tools tabs |
-| BetterBotWatch | Independent Watch app; 5/25/50-minute focus sessions and searchable offline Python Q&A |
+| BetterBotWatch | Independent Watch app; 5/25/50-minute focus sessions and searchable offline coding Q&A |
 | BetterBotTV | Native focus board and searchable coding reader with remote focus navigation |
 | BetterBotLiveActivity | Embedded iPhone WidgetKit extension for focus countdown on the Lock Screen and supported Dynamic Island devices |
 | Apple Home | Optional HomeKit connection on iPhone/iPad; rooms, accessory counts, scene names, explicit confirmation before executing a chosen scene |
 
 The watch and TV apps are local companions, not full AI chat clients. They do not inherit browser authentication, paid entitlements, or cloud chat history. Timers, projects, and conversations do not sync across devices. There is no immersive mixed-reality scene, gesture tracking, or headset camera access.
 
-The coding reader bundles the existing **20-record public pilot**, not millions of answers. It preserves question/answer authors, source URLs, and licenses. HTML is adapted into plain text; originals and provenance remain in `knowledge/pilot.json`. The data is available offline and is not freshly generated AI advice.
+The coding reader bundles the existing **1,000-record sourced library**, not millions of answers. It preserves question/answer authors, source URLs, and licenses. HTML is adapted into plain text; originals and provenance remain in `knowledge/pilot.json`. The data is available offline and is not freshly generated AI advice.
 
 ## Focus and Dynamic Island
 
@@ -60,3 +60,11 @@ Watch-only packaging is intentional; no WatchConnectivity or iPhone companion em
 - [Enabling HomeKit](https://developer.apple.com/documentation/homekit/enabling-homekit-in-your-app)
 - [Single-target watchOS apps](https://developer.apple.com/documentation/watchos-apps/migrating-to-a-single-target-watchos-app)
 - [Apple Home development](https://developer.apple.com/apple-home/)
+
+## CarPlay and native polish
+
+The focus Live Activity now declares small and medium activity families, with an adaptive compact card for CarPlay Dashboard and the paired Watch Smart Stack. There are no interactive controls or chat transcripts in the car layout. Start the activity on iPhone before driving; display depends on the connected system and its Live Activity settings. This is Live Activity support, not a standalone voice-chat CarPlay app. Voice conversation is not implemented or entitlement-approved. CarPlay Dashboard rendering still needs simulator/vehicle verification.
+
+Library search now matches every whitespace-separated search term across titles, questions, and answers, with a result count and clear button. The native tools sheet owns its Done button inside its navigation toolbar. Apple Home shows a waiting state while the initial permission flow completes.
+
+Reference: https://developer.apple.com/documentation/ActivityKit/creating-custom-views-for-live-activities

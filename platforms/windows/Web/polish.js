@@ -90,11 +90,15 @@
     if(!query.reportValidity()) return;
     libraryButton.disabled=true; libraryResults.textContent='Searching sourced coding answers…';
     try {
-      const response=await fetch('https://satbot.drarcode22.workers.dev/knowledge?q='+encodeURIComponent(query.value.trim()));
+      const response=await fetch('./knowledge/generated/library.json');
       if(!response.ok) throw Error('Knowledge lookup unavailable.');
-      const data=await response.json(); libraryResults.replaceChildren();
+      const library=await response.json();
+      if(!Array.isArray(library.entries)) throw Error('Invalid library');
+      const terms=query.value.trim().toLowerCase().split(/\s+/).filter(Boolean).slice(0,10);
+      const matches=library.entries.filter(entry=>{const text=(entry.title+' '+(entry.tags||[]).join(' ')+' '+entry.question.html+' '+entry.answer.html).toLowerCase();return terms.every(term=>text.includes(term));});
+      const data={results:matches.slice(0,5),total:library.entries.length}; libraryResults.replaceChildren();
       const summary=document.createElement('p');
-      summary.textContent=data.results.length+(data.results.length===1?' match in the ':' matches in the ')+data.total+'-record pilot library.';
+      summary.textContent='Showing '+data.results.length+' of '+matches.length+' matches in the '+data.total+'-record sourced library.';
       libraryResults.append(summary);
       for(const entry of data.results){
         const url=new URL(entry.answer.url);

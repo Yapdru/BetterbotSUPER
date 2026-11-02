@@ -9,9 +9,7 @@ import SwiftUI
                     ToolbarItem { Button("Apple tools", systemImage: "sparkles") { showingTools = true } }
                 }
             }.sheet(isPresented: $showingTools) {
-                NativeToolsView().toolbar {
-                    ToolbarItem { Button("Done") { showingTools = false } }
-                }.frame(minWidth: 300, minHeight: 400)
+                NativeToolsView(onDone: { showingTools = false }).frame(minWidth: 300, minHeight: 400)
             }
         }
     }

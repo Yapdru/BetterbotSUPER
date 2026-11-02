@@ -1,5 +1,5 @@
-const CACHE = 'bb-offline-v9';
-const ASSETS = ['./','./index.html','./app.js','./polish.css','./polish.js','./reliability.js','./shell.js','./shell.css','./manifest.webmanifest','./web-llm.min.js','./games/dino.html','./games/dino3d.html','./games/surf.html','./games/vendor/three.min.js','./icon-192.png','./icon-512.png','./icon-180.png','./icon-152.png','./icon-120.png'];
+const CACHE = 'bb-offline-v10';
+const ASSETS = ['./','./index.html','./knowledge/generated/library.json','./app.js','./polish.css','./polish.js','./reliability.js','./shell.js','./shell.css','./manifest.webmanifest','./web-llm.min.js','./games/dino.html','./games/dino3d.html','./games/surf.html','./games/vendor/three.min.js','./icon-192.png','./icon-512.png','./icon-180.png','./icon-152.png','./icon-120.png'];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(ASSETS)));
 });

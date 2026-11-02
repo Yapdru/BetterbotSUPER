@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct NativeToolsView: View {
+    var onDone: (() -> Void)? = nil
     var body: some View {
         NavigationStack {
             List {
@@ -8,6 +9,7 @@ struct NativeToolsView: View {
                     NavigationLink { FocusView() } label: { Label("Focus timer", systemImage: "timer") }
                     NavigationLink { LibraryView() } label: { Label("Offline coding library", systemImage: "books.vertical") }
                     #if os(iOS)
+                    NavigationLink { DrivingMapView() } label: { Label("Driving map", systemImage: "map") }
                     NavigationLink { HomeView() } label: { Label("Apple Home", systemImage: "house") }
                     #endif
                 }
@@ -16,6 +18,9 @@ struct NativeToolsView: View {
                         .font(.caption).foregroundStyle(.secondary)
                 }
             }.navigationTitle("BetterBot")
+            .toolbar {
+                if let onDone { ToolbarItem { Button("Done", action: onDone) } }
+            }
         }
     }
 }

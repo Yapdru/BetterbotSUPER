@@ -9,13 +9,21 @@ struct LibraryView: View {
     @State private var records: [LibraryRecord] = []
     @State private var failed = false
     private var matches: [LibraryRecord] {
-        records.filter { query.isEmpty || $0.title.localizedCaseInsensitiveContains(query) }
+        let terms = query.split(whereSeparator: { $0.isWhitespace }).map(String.init)
+        return records.filter { record in
+            let text = record.title + " " + record.question + " " + record.answer
+            return terms.allSatisfy { text.localizedCaseInsensitiveContains($0) }
+        }
     }
     var body: some View {
         List {
             Section {
-                Text("20 sourced Python questions · available offline").font(.caption).foregroundStyle(.secondary)
-                TextField("Search titles", text: $query)
+                Text("\(records.count) sourced coding questions · available offline").font(.caption).foregroundStyle(.secondary)
+                TextField("Search questions and answers", text: $query)
+                if !query.isEmpty {
+                    Button("Clear search") { query = "" }
+                    Text("\(matches.count) results").font(.caption).foregroundStyle(.secondary)
+                }
             }
             if failed { Text("The bundled library could not load. Reinstall the app.") }
             if !failed && matches.isEmpty { Text("No matching questions. Try a shorter search.") }
@@ -37,10 +45,10 @@ struct LibraryView: View {
                                 .font(.caption).foregroundStyle(.secondary)
                             #if !os(tvOS)
                             if let url = URL(string: record.url) { Link("Original answer and attribution", destination: url) }
-                            if let license = URL(string: "https://creativecommons.org/licenses/by-sa/4.0/") { Link("License", destination: license) }
+                            if let license = URL(string: "https://creativecommons.org/licenses/by-sa/\(record.license.split(separator: " ").last ?? "4.0")/") { Link("License", destination: license) }
                             #else
                             Text(record.url).font(.caption)
-                            Text("creativecommons.org/licenses/by-sa/4.0").font(.caption)
+                            Text(record.license).font(.caption)
                             #endif
                         }.padding()
                     }.focusable().navigationTitle("Coding library")

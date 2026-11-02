@@ -10,6 +10,7 @@ import Combine
     private var manager: HMHomeManager?
     func connect() {
         guard manager == nil else { refresh(); return }
+        status = "Waiting for Apple Home access…"
         manager = HMHomeManager(); manager?.delegate = self
     }
     func refresh() {

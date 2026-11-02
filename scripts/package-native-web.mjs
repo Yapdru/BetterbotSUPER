@@ -7,12 +7,15 @@ for(const name of ['index.html','app.js','polish.js','polish.css','reliability.j
   await copyFile(path.join(root,name),path.join(target,name));
 }
 await cp(path.join(root,'games'),path.join(target,'games'),{recursive:true});
+await mkdir(path.join(target,'knowledge/generated'),{recursive:true});
+await copyFile(path.join(root,'knowledge/generated/library.json'),path.join(target,'knowledge/generated/library.json'));
 // Packaged webviews do not share browser OAuth sessions or support service workers.
 let html=await readFile(path.join(target,'index.html'),'utf8');
-html=html.replace('</body>','<script src="native-mode.js"></script></body>');
+html=html.replace('</body>','<script defer src="native-mode.js"></script></body>');
 await writeFile(path.join(target,'index.html'),html);
 await writeFile(path.join(target,'native-mode.js'),`document.addEventListener('DOMContentLoaded',()=>{
- if(!getAuth()) skipSignIn();
+ skipSignIn();
+ const gate=document.getElementById('bbGate');if(gate)gate.hidden=true;
  const oldAuth=document.getElementById('bbAuthBtn');
  if(oldAuth){const link=document.createElement('a');link.href='https://betterai-3ca66.web.app';link.className=oldAuth.className;link.textContent='Sign in online';link.style.textDecoration='none';oldAuth.replaceWith(link);}
  const note=document.createElement('p');note.className='small';note.textContent='Native preview · local tools available. Use Online workspace in the app toolbar for browser sign-in and cloud features.';

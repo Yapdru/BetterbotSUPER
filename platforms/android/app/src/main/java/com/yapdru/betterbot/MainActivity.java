@@ -34,11 +34,12 @@ public class MainActivity extends Activity {
             }
         });
         web.setWebChromeClient(new WebChromeClient());
-        web.loadUrl("https://appassets.androidplatform.net/assets/Web/index.html");
+        if (state == null || web.restoreState(state) == null) web.loadUrl("https://appassets.androidplatform.net/assets/Web/index.html");
     }
     private void openExternal(Uri uri) {
         if (!"https".equals(uri.getScheme()) && !"mailto".equals(uri.getScheme())) return;
         try { startActivity(new Intent(Intent.ACTION_VIEW, uri)); } catch (android.content.ActivityNotFoundException e) { Toast.makeText(this,"No browser available",Toast.LENGTH_SHORT).show(); }
     }
+    @Override protected void onSaveInstanceState(Bundle state) { web.saveState(state); super.onSaveInstanceState(state); }
     @Override protected void onDestroy() { if(web!=null) web.destroy(); super.onDestroy(); }
 }

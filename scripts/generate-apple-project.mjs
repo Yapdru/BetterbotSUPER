@@ -5,7 +5,9 @@ const apple=path.join(root,'platforms/apple');
 const directory=path.join(apple,'BetterBotApple.xcodeproj');
 await mkdir(path.join(directory,'xcshareddata/xcschemes'),{recursive:true});
 const decode=s=>s.replace(/<[^>]*>/g,'').replace(/&quot;/g,'"').replace(/&#39;|&apos;/g,"'").replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&').replace(/&#(\d+);/g,(_,n)=>String.fromCodePoint(Number(n)));
-const pilot=JSON.parse(await readFile(path.join(root,'knowledge/pilot.json'),'utf8'));
+let libraryFile=path.join(root,'knowledge/generated/library.json');
+try{await readFile(libraryFile);}catch{libraryFile=path.join(root,'knowledge/pilot.json');}
+const pilot=JSON.parse(await readFile(libraryFile,'utf8'));
 await writeFile(path.join(apple,'Shared/native-library.json'),JSON.stringify(pilot.entries.map(e=>({
   id:e.id,title:decode(e.title),question:decode(e.question.html),answer:decode(e.answer.html),
   author:decode(e.answer.author.display_name),license:e.answer.license,url:e.answer.url,
@@ -25,7 +27,7 @@ const common=['Shared/FocusSession.swift','Shared/LibraryView.swift','Shared/Nat
 const content='BetterBot/BetterBot/ContentView.swift';
 const targets=[
  {name:'BetterBotLiveActivity',bundle:'com.yapdru.betterbot.liveactivity',extension:true,sdk:'iphoneos',platforms:'iphoneos iphonesimulator',family:'1,2',sources:['Shared/FocusAttributes.swift','LiveActivity/FocusWidget.swift'],extra:{INFOPLIST_FILE:'LiveActivity/Info.plist',SKIP_INSTALL:'YES',APPLICATION_EXTENSION_API_ONLY:'YES'}},
- {name:'BetterBot',bundle:'com.yapdru.betterbot',sdk:'iphoneos',platforms:'iphoneos iphonesimulator',family:'1,2',sources:['BetterBot/BetterBot/MyApp.swift',content,...common,'Shared/FocusAttributes.swift','Shared/HomeView.swift'],web:true,embed:true,extra:{CODE_SIGN_ENTITLEMENTS:'Shared/BetterBot.entitlements',INFOPLIST_KEY_NSHomeKitUsageDescription:'View your rooms and run scenes only when you choose to connect Apple Home.',INFOPLIST_KEY_NSSupportsLiveActivities:'YES'}},
+ {name:'BetterBot',bundle:'com.yapdru.betterbot',sdk:'iphoneos',platforms:'iphoneos iphonesimulator',family:'1,2',sources:['BetterBot/BetterBot/MyApp.swift',content,...common,'Shared/FocusAttributes.swift','Shared/HomeView.swift','Shared/DrivingMapView.swift','CarPlay/CarPlayMapScene.swift','Shared/GuidancePill.swift'],web:true,embed:true,extra:{CODE_SIGN_ENTITLEMENTS:'Shared/BetterBot.entitlements',INFOPLIST_KEY_NSLocationWhenInUseUsageDescription:'Show your location and approximate GPS speed only while you use the driving map.',INFOPLIST_KEY_NSHomeKitUsageDescription:'View your rooms and run scenes only when you choose to connect Apple Home.',INFOPLIST_KEY_NSSupportsLiveActivities:'YES'}},
  {name:'BetterBotWatch',bundle:'com.yapdru.betterbot.watch',sdk:'watchos',platforms:'watchos watchsimulator',family:'4',sources:['Watch/WatchApp.swift',...common],extra:{INFOPLIST_KEY_WKApplication:'YES',INFOPLIST_KEY_WKWatchOnly:'YES',INFOPLIST_KEY_WKRunsIndependentlyOfCompanionApp:'YES'}},
  {name:'BetterBotTV',bundle:'com.yapdru.betterbot.tv',sdk:'appletvos',platforms:'appletvos appletvsimulator',family:'3',sources:['TV/TVApp.swift',...common]},
  {name:'BetterBotVision',bundle:'com.yapdru.betterbot.vision',sdk:'xros',platforms:'xros xrsimulator',family:'7',sources:['Vision/VisionApp.swift',content,...common],web:true},

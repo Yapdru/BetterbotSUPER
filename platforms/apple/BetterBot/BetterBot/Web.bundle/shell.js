@@ -46,6 +46,25 @@
     pages[id].focus({preventScroll:true});window.scrollTo({top:0,behavior:'instant'});
   }
   showPage('chat');
+  const quiz=document.getElementById('quizModal');
+  if(quiz){
+    document.body.append(quiz);quiz.setAttribute('role','dialog');quiz.setAttribute('aria-modal','true');quiz.setAttribute('aria-label','Practice quiz');
+    let restoreFocus;
+    new MutationObserver(()=>{
+      const open=quiz.classList.contains('on');shell.inert=open;
+      if(open){restoreFocus=document.activeElement;quiz.querySelector('button')?.focus();}
+      else if(restoreFocus?.isConnected)restoreFocus.focus();
+    }).observe(quiz,{attributes:true,attributeFilter:['class']});
+    quiz.addEventListener('keydown',event=>{
+      if(event.key==='Escape'){event.preventDefault();closeQuiz();}
+      if(event.key==='Tab'){
+        const buttons=[...quiz.querySelectorAll('button:not(:disabled)')];const first=buttons[0],last=buttons.at(-1);
+        if(event.shiftKey&&document.activeElement===first){event.preventDefault();last?.focus();}
+        else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus();}
+      }
+    });
+  }
+
 
   const STORE='bb_projects_v1';let projects=[],activeId=null;
   try{const parsed=JSON.parse(localStorage.getItem(STORE)||'[]');if(Array.isArray(parsed)) projects=parsed.filter(p=>p&&typeof p.id==='string'&&typeof p.name==='string'&&Array.isArray(p.chat));}catch{}
