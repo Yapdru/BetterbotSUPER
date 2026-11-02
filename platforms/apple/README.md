@@ -60,3 +60,11 @@ Watch-only packaging is intentional; no WatchConnectivity or iPhone companion em
 - [Enabling HomeKit](https://developer.apple.com/documentation/homekit/enabling-homekit-in-your-app)
 - [Single-target watchOS apps](https://developer.apple.com/documentation/watchos-apps/migrating-to-a-single-target-watchos-app)
 - [Apple Home development](https://developer.apple.com/apple-home/)
+
+## CarPlay and native polish
+
+The focus Live Activity now declares small and medium activity families, with an adaptive compact card for CarPlay Dashboard and the paired Watch Smart Stack. There are no interactive controls or chat transcripts in the car layout. Start the activity on iPhone before driving; display depends on the connected system and its Live Activity settings. This is Live Activity support, not a standalone voice-chat CarPlay app. Voice conversation is not implemented or entitlement-approved. CarPlay Dashboard rendering still needs simulator/vehicle verification.
+
+Library search now matches every whitespace-separated search term across titles, questions, and answers, with a result count and clear button. The native tools sheet owns its Done button inside its navigation toolbar. Apple Home shows a waiting state while the initial permission flow completes.
+
+Reference: https://developer.apple.com/documentation/ActivityKit/creating-custom-views-for-live-activities

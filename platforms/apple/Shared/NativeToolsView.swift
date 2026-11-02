@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct NativeToolsView: View {
+    var onDone: (() -> Void)? = nil
     var body: some View {
         NavigationStack {
             List {
@@ -16,6 +17,9 @@ struct NativeToolsView: View {
                         .font(.caption).foregroundStyle(.secondary)
                 }
             }.navigationTitle("BetterBot")
+            .toolbar {
+                if let onDone { ToolbarItem { Button("Done", action: onDone) } }
+            }
         }
     }
 }
